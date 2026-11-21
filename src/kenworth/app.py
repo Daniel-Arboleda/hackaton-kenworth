@@ -8,7 +8,7 @@ from kenworth.correlation import investigate
 from kenworth.detection import detect
 from kenworth.hardening import plan
 from kenworth.ingestion import load_context, load_events
-from kenworth.storage import connect, get, save
+from kenworth.storage import DISPOSITIONS, ROLES, connect, get, save
 
 ROOT = Path(os.getenv('KENWORTH_RESOURCES', '/app/resources'))
 DB = Path(os.getenv('KENWORTH_DB', '/app/data/decisions.sqlite'))
@@ -39,6 +39,7 @@ def main():
     shown = [item for item in alerts if category == 'Todas' or item['tipo'] == category]
     st.dataframe(shown, use_container_width=True, hide_index=True)
     st.subheader('Investigación y decisión humana')
+    st.caption('Evento → detección → contextualización → analista → decisión → administrador del activo o responsable de Tecnología. Sin bloqueos ni notificaciones automáticas.')
     selected = st.selectbox('Alerta', [item['alerta_id'] for item in shown])
     alert = next(item for item in alerts if item['alerta_id'] == selected)
     evidence = investigate(alert, events, context)
@@ -54,10 +55,13 @@ def main():
         st.write('Decisión guardada:', previous)
     with st.form('decision'):
         state = st.selectbox('Estado', ['Revisar', 'Cerrar', 'Escalar'])
+        disposition = st.selectbox('Disposición del analista', DISPOSITIONS)
+        role = st.selectbox('Rol destinatario', ROLES)
+        responsible = st.text_input('Responsable identificado (opcional)')
         reason = st.text_area('Justificación y evidencia adicional')
         if st.form_submit_button('Guardar decisión'):
             try:
-                save(db, selected, state, reason)
+                save(db, selected, state, reason, disposition, role, responsible)
                 st.success('Decisión guardada')
             except ValueError as error:
                 st.error(str(error))

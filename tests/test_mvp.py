@@ -1,5 +1,6 @@
 import csv
 import json
+import sqlite3
 import sys
 import tempfile
 import unittest
@@ -64,6 +65,44 @@ class MVPTests(unittest.TestCase):
             db.close()
             db = connect(path)
             self.assertEqual(get(db, 'AL001')['justificacion'], 'Contrastar CH01')
+            db.close()
+
+    def test_disposition_recipient_and_migration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'legacy.sqlite'
+            legacy = sqlite3.connect(path)
+            legacy.execute('CREATE TABLE decisions (alerta_id TEXT PRIMARY KEY, estado TEXT NOT NULL, justificacion TEXT NOT NULL, actualizado TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
+            legacy.execute("INSERT INTO decisions(alerta_id, estado, justificacion) VALUES ('AL001', 'Revisar', 'Revisar CH01')")
+            legacy.commit()
+            legacy.close()
+            db = connect(path)
+            self.assertEqual(get(db, 'AL001')['justificacion'], 'Revisar CH01')
+            self.assertEqual(get(db, 'AL001')['disposicion'], 'Pendiente de revisión')
+            save(db, 'AL001', 'Escalar', 'Falta confirmar alcance CH01', 'Requiere investigación', 'Administrador del activo', 'Responsable de prueba')
+            db.close()
+            db = connect(path)
+            decision = get(db, 'AL001')
+            self.assertEqual(decision['rol_destinatario'], 'Administrador del activo')
+            self.assertEqual(decision['responsable'], 'Responsable de prueba')
+            self.assertEqual(decision['disposicion'], 'Requiere investigación')
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM decisions').fetchone()[0], 1)
+            db.close()
+
+    def test_classification_validation_and_no_automatic_closure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db = connect(Path(directory) / 'decisions.sqlite')
+            evidence = investigate(self.alerts[0], self.events, self.context)
+            self.assertEqual(evidence['matching_changes'][0]['cambio_id'], 'CH01')
+            self.assertIsNone(get(db, self.alerts[0]['alerta_id']))
+            for disposition, role in [('Confirmado', 'Analista de seguridad'), ('Requiere investigación', 'Firewall')]:
+                with self.subTest(disposition=disposition, role=role):
+                    with self.assertRaises(ValueError):
+                        save(db, 'AL001', 'Escalar', 'Evidencia', disposition, role)
+            with self.assertRaises(ValueError):
+                save(db, 'AL001', 'Cerrar', 'Coincide con CH01')
+            self.assertIsNone(get(db, 'AL001'))
+            save(db, 'AL001', 'Escalar', 'Solicitar revisión; ninguna acción automática', 'Requiere investigación', 'Responsable de Tecnología')
+            self.assertEqual(get(db, 'AL001')['estado'], 'Escalar')
             db.close()
 
     def test_hardening(self):
