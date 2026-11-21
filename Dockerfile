@@ -6,4 +6,4 @@ RUN pip install --no-cache-dir -r requirements.txt && useradd --uid 10001 --crea
 COPY src/ /app/src/
 USER appuser
 EXPOSE 8501
-CMD ["streamlit", "run", "src/kenworth/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true"]
+CMD ["streamlit", "run", "src/kenworth/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true", "--browser.gatherUsageStats=false"]
