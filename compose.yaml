@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${PORT:-8501}:8501"
+    environment:
+      KENWORTH_RESOURCES: /app/resources
+      KENWORTH_DB: /app/data/decisions.sqlite
+    volumes:
+      - ./Kenworth_Recursos_de_Prueba:/app/resources:ro
+      - decisions:/app/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  decisions:
