@@ -72,10 +72,13 @@ def diff_json(expected, actual):
 def case_a():
     events = load_events(EVENTS)
     alerts = detect(events, load_context(RESOURCES)['parameters'])
-    assert len(events) == 324, f'Eventos: {len(events)}, esperado 324'
+    if len(events) != 324:
+        raise AssertionError(f'Eventos: {len(events)}, esperado 324')
     unique = len({row['evento_id'] for row in events})
-    assert unique == 324, f'IDs únicos: {unique}, esperado 324'
-    assert len(alerts) == 6, f'Alertas: {len(alerts)}, esperado 6'
+    if unique != 324:
+        raise AssertionError(f'IDs únicos: {unique}, esperado 324')
+    if len(alerts) != 6:
+        raise AssertionError(f'Alertas: {len(alerts)}, esperado 6')
     return f'EVENTOS_CARGADOS={len(events)}; ALERTAS_GENERADAS={len(alerts)}; EVENTOS_UNICOS={unique}', len(events), len(alerts)
 
 
