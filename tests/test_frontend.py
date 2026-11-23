@@ -16,6 +16,12 @@ except ImportError:
 
 @unittest.skipUnless(AppTest, "Streamlit is available in the Docker image")
 class FrontendTests(unittest.TestCase):
+    @staticmethod
+    def navigate(app, area, view):
+        app.sidebar.selectbox[0].set_value(area).run()
+        app.sidebar.selectbox[1].set_value(view).run()
+        return app
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.previous_resources = os.environ.get("KENWORTH_RESOURCES")
@@ -43,30 +49,38 @@ class FrontendTests(unittest.TestCase):
         app = self.app()
         self.assertEqual([(item.label, item.value) for item in app.metric][:3],
                          [("Eventos", "324"), ("Alertas", "6"), ("Activos", "10")])
-        for section in ("Prioridades", "Riesgos por activo", "Alertas", "Topología",
-                        "Rutas hipotéticas", "Hardening", "Reporte", "Validación", "Demo guiada"):
-            app.sidebar.radio[0].set_value(section).run()
+        for area, section in (("Centro de operaciones", "Prioridades"),
+                              ("Centro de operaciones", "Reporte"),
+                              ("Investigaciones", "Alertas"), ("Investigaciones", "Demo guiada"),
+                              ("Infraestructura", "Riesgos por activo"), ("Infraestructura", "Topología"),
+                              ("Infraestructura", "Rutas hipotéticas"), ("Infraestructura", "Hardening"),
+                              ("Integraciones", "Fuentes y conectores"),
+                              ("Auditorías y calibración", "Validación"),
+                              ("Auditorías y calibración", "Centro de auditoría"),
+                              ("Academia y ayuda", "Guía rápida"),
+                              ("Configuración", "Estado del laboratorio")):
+            self.navigate(app, area, section)
             self.assertEqual(len(app.exception), 0, section)
 
     def test_alert_evidence_and_topology(self):
         app = self.app()
-        app.sidebar.radio[0].set_value("Alertas").run()
+        self.navigate(app, "Investigaciones", "Alertas")
         self.assertEqual(len(app.exception), 0)
-        self.assertEqual(len(app.selectbox), 5)
+        self.assertEqual(len(app.selectbox), 7)  # cinco controles de alerta y dos de navegación
         self.assertEqual(app.selectbox[1].options[0], "AL001")
-        app.sidebar.radio[0].set_value("Topología").run()
+        self.navigate(app, "Infraestructura", "Topología")
         self.assertEqual(len(app.exception), 0)
         self.assertEqual([item.value for item in app.metric], ["10", "103", "3"])
 
     def test_validation_empty_state(self):
         app = self.app()
-        app.sidebar.radio[0].set_value("Validación").run()
+        self.navigate(app, "Auditorías y calibración", "Validación")
         self.assertEqual(len(app.exception), 0)
         self.assertTrue(any("Evidencia no disponible" in item.value for item in app.info))
 
     def test_human_decision_persists(self):
         app = self.app()
-        app.sidebar.radio[0].set_value("Alertas").run()
+        self.navigate(app, "Investigaciones", "Alertas")
         app.selectbox[3].set_value("Requiere investigación")
         app.selectbox[4].set_value("Administrador del activo")
         app.text_area[0].set_value("Revisar alcance de CH01")
@@ -74,33 +88,42 @@ class FrontendTests(unittest.TestCase):
         self.assertEqual(len(app.exception), 0)
         reopened = self.app()
         self.assertEqual(reopened.metric[3].value, "1")
-        reopened.sidebar.radio[0].set_value("Alertas").run()
+        self.navigate(reopened, "Investigaciones", "Alertas")
         self.assertEqual(reopened.selectbox[3].value, "Requiere investigación")
 
     def test_priority_asset_and_route_details(self):
         app = self.app()
-        app.sidebar.radio[0].set_value("Prioridades").run()
+        self.navigate(app, "Centro de operaciones", "Prioridades")
         self.assertEqual(len(app.exception), 0)
         self.assertIn("E0324", app.selectbox[0].options)
         app.selectbox[0].set_value("E0324").run()
         self.assertEqual(len(app.exception), 0)
-        app.sidebar.radio[0].set_value("Riesgos por activo").run()
+        self.navigate(app, "Infraestructura", "Riesgos por activo")
         self.assertEqual(len(app.exception), 0)
         self.assertEqual(len(app.selectbox[0].options), 10)
         app.selectbox[0].set_value("A04").run()
         self.assertEqual(len(app.exception), 0)
         self.assertTrue(any("Prioridad de revisión calculada" in item.value for item in app.markdown))
-        app.sidebar.radio[0].set_value("Rutas hipotéticas").run()
+        self.navigate(app, "Infraestructura", "Rutas hipotéticas")
         self.assertEqual(len(app.exception), 0)
 
     def test_report_and_topology_views(self):
         app = self.app()
-        app.sidebar.radio[0].set_value("Topología").run()
+        self.navigate(app, "Infraestructura", "Topología")
         self.assertEqual(len(app.exception), 0)
         self.assertTrue(any("Leyenda" in item.value for item in app.caption))
-        app.sidebar.radio[0].set_value("Reporte").run()
+        self.navigate(app, "Centro de operaciones", "Reporte")
         self.assertEqual(len(app.exception), 0)
         self.assertTrue(any("Dataset" in item.value for item in app.markdown))
+
+    def test_archive_mode_and_readable_alert_detail(self):
+        app = self.app()
+        self.assertTrue(any("Modo archivo" in item.value for item in app.markdown))
+        self.navigate(app, "Integraciones", "Fuentes y conectores")
+        self.assertTrue(any("receptor Syslog" in item.value for item in app.markdown))
+        self.navigate(app, "Investigaciones", "Alertas")
+        self.assertTrue(any("Señal observada" in item.value for item in app.markdown))
+        self.assertTrue(any(item.label == "Campos técnicos completos" for item in app.expander))
 
 
 if __name__ == "__main__":
