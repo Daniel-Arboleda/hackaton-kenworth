@@ -72,6 +72,7 @@ class SyslogReceiverTests(unittest.TestCase):
         self.send(b"X" * 129 + b"\n")
         self.until(lambda: self.receiver.stats()["rejected"] == 2)
         self.send(b"<134> recovered-a\n")
+        self.until(lambda: self.receiver.stats()["accepted"] == 1)
         self.send(b"<134> recovered-b\n")
         self.until(lambda: self.receiver.stats()["accepted"] == 2)
         self.assertEqual(self.receiver.stats()["quarantined"], 2)
