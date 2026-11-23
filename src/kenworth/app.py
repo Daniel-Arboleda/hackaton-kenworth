@@ -19,6 +19,7 @@ from kenworth.explanations import explain_alert
 from kenworth.exposure import analyze_exposure
 from kenworth.hardening import plan
 from kenworth.ingestion import load_context, load_events
+from kenworth.operations_ui import render_operations_center
 from kenworth.playbooks import playbook_for
 from kenworth.parsers import detect_format, parse_message
 from kenworth.phase2_flows import inspect_messages
@@ -36,6 +37,7 @@ DATABASE = Path(os.getenv("KENWORTH_DB", PROJECT / ".data/decisions.sqlite"))
 DRAFT_DATABASE = Path(os.getenv("KENWORTH_DRAFT_DB", DATABASE.with_name("drafts.sqlite")))
 EVIDENCE = Path(os.getenv("KENWORTH_ACCEPTANCE", PROJECT / "artifacts/acceptance/p01"))
 SECTION_HELP = {
+    "Operaciones": "Salud, prioridades, recomendaciones y decisiones locales del laboratorio sintético.",
     "Panorama": "Señales y decisiones basadas exclusivamente en el archivo sintético cargado.",
     "Prioridades": "Orden de revisión calculado por el backend; no es severidad de incidente.",
     "Riesgos por activo": "Criticidad, hallazgos y relaciones con procedencia verificable.",
@@ -540,7 +542,9 @@ def main():
         st.error(f"No se pudieron cargar los datos del laboratorio: {error}")
         st.stop()
     try:
-        if section == "Panorama":
+        if section == "Operaciones":
+            render_operations_center(context, events, alerts, queue, db)
+        elif section == "Panorama":
             summary(context, events, alerts, db, exposure, queue)
         elif section == "Prioridades":
             priority_view(queue, db)
