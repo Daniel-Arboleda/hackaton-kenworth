@@ -1,5 +1,11 @@
 # Informe del reto — Kenworth Security Monitor
 
+## Resultado incremental de fase 2
+
+La fase 2 mantiene los 324 eventos y seis alertas de referencia e incorpora navegación jerárquica, grafo visual, academia y borradores aislados, auditorías didácticas con calibración derivada, receptor Syslog TCP sintético en loopback, parsers con procedencia y un asistente de fallback determinista. Los módulos se conectaron sin cambiar los recursos originales. WP-023 pasó 90/90 pruebas Docker y P01/P02/P03 (7/8/12); la inspección visual se hizo en la demo aislada 18523, con el puerto estable 18513 respondiendo HTTP 200. La [evidencia y límites](QA_FASE2_WP023.md) detallan el alcance.
+
+La recepción TCP y el parser se probaron juntos con un mensaje sintético que generó una alerta provisional; esto no demuestra recepción de Palo Alto real. Los adaptadores OpenAI, Anthropic y DeepSeek se probaron solo con transporte simulado y permanecen deshabilitados. Los borradores no equivalen a decisiones guardadas; la calibración local no equivale a una aprobación empresarial. Para costos y riesgos de operación, consulte la [entrega de fase 2](ENTREGA_FASE2_WP024.md).
+
 ## Problema y usuario objetivo
 
 Un equipo de TI pequeño necesita ordenar señales heterogéneas y decidir qué revisar primero, con contexto suficiente para distinguir una anomalía de una actividad posiblemente autorizada. El MVP está dirigido a un analista que investiga y documenta una decisión, con administrador del activo y responsable de Tecnología como roles propuestos para revisión y escalamiento. Estos roles no son asignaciones confirmadas por Kenworth.

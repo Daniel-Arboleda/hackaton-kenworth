@@ -28,6 +28,15 @@ Si Docker informa que agotó sus pools para crear una subred nueva, use el `brid
 - Explorar relaciones observadas `allow` y `deny`, flujos documentados no verificados y rutas hipotéticas con evidencia de cada tramo.
 - Consultar una cola de prioridad didáctica 1–9 y tres acciones de hardening propuestas.
 - Descargar un informe Markdown local generado en memoria, con procedencia y límites.
+- Explorar un grafo visual con filtros y evidencia; `deny` y flujos documentales no son transitables.
+- Consultar Academia, ayuda contextual, auditorías didácticas y calibración local derivada.
+- Guardar y recuperar borradores de investigación aislados de las decisiones definitivas.
+- Inspeccionar mensajes sintéticos con parsers CSV, JSON, Syslog y Palo Alto Traffic acotado. El receptor TCP Syslog funciona aparte en loopback.
+- Obtener un borrador de explicación con evidencia mediante fallback determinista. Proveedores externos deshabilitados por defecto.
+
+## Demo de fase 2 separada
+
+Conserve la demo estable en 18513. Para probar esta rama en otro puerto, establezca `PORT=18523` y use otro proyecto Compose, por ejemplo `kenworth-phase2`. Compruebe `docker compose ... config` antes de `up --build -d`; `compose.bridge.yaml` sigue disponible si Docker agotó pools de red. Abra `http://127.0.0.1:18523`. Cada proyecto usa su propio volumen; no ejecute `down -v` si quiere conservar decisiones.
 
 ## Validación
 
@@ -50,7 +59,10 @@ Las pruebas Streamlit AppTest requieren Streamlit; si Python local no lo tiene, 
 - [Guion de demostración de 3–5 minutos](docs/GUION_DEMO.md)
 - [Dependencias, licencias y evolución](docs/DEPENDENCIAS_Y_EVOLUCION.md)
 - [Plan y estado de los incrementos](docs/PLAN_EJECUCION_WP008_WP013.md)
+- [Plan maestro y checkpoint de fase 2](docs/PLAN_FASE2_WP014_WP024.md)
+- [Entrega, costos y riesgos de fase 2](docs/ENTREGA_FASE2_WP024.md)
+- [QA y evidencia de fase 2](docs/QA_FASE2_WP023.md)
 
 ## Límites
 
-Sin conexión con Kenworth ni Palo Alto real, autenticación, escaneo, explotación, cambios de firewall, bloqueos automáticos, IA generativa, tickets externos o confirmación automática de incidentes. Un `allow` observado no prueba conectividad completa; una ruta candidata no demuestra movimiento lateral. La prioridad ordena revisión, no expresa probabilidad ni severidad de incidente. **La prueba de usabilidad con otra persona sigue pendiente.** No despliegue públicamente el MVP sin controles de identidad, autorización y revisión de datos.
+Sin conexión con Kenworth ni Palo Alto real, autenticación empresarial, escaneo, explotación, cambios de firewall, bloqueos automáticos, proveedores externos de IA en vivo, tickets externos o confirmación automática de incidentes. Un `allow` observado no prueba conectividad completa; una ruta candidata no demuestra movimiento lateral. La prioridad ordena revisión, no expresa probabilidad ni severidad de incidente. **La prueba de usabilidad con otra persona sigue pendiente.** No despliegue públicamente el MVP sin controles de identidad, autorización y revisión de datos.
