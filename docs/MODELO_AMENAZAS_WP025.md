@@ -31,3 +31,11 @@ Comprobar `docker compose config` y el `docker inspect` de **un contenedor SENTR
 ## Riesgos pendientes
 
 No se ha verificado un bloqueo de egress, un escaneo de vulnerabilidades de la imagen ni un límite del volumen persistente impuesto por Docker. El archivo `compose.bridge.yaml` no aporta aislamiento de salida. Mantener las integraciones externas desactivadas por defecto.
+
+## Evidencia de verificación (2026-11-23)
+
+- `docker compose config --quiet`: correcto.
+- Contenedor aislado `sentrix-wp025-app-1`: `ReadonlyRootfs=true`, `CapDrop=[ALL]`, `PidsLimit=128`, `Memory=805306368`, `NanoCpus=1000000000`, `SecurityOpt=[no-new-privileges:true]`, usuario `appuser`, `/tmp` con `noexec,nosuid` y puerto `8501/tcp` enlazado a `127.0.0.1:18525`.
+- Salud HTTP de la aplicación: 200 en loopback.
+- `python -m unittest discover -s tests -q`: 90 pruebas locales correctas; 10 omisiones de Streamlit por entorno local.
+- Regresión en imagen Docker con `--network none`, raíz de solo lectura y montajes limitados a `src`, `tests`, `.streamlit` y recursos sintéticos del repositorio: 90/90 correctas.
