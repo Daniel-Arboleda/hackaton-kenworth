@@ -1,5 +1,13 @@
 # Arquitectura y contratos del MVP
 
+## Extensión de fase 2
+
+WP-014 fijó `contracts_v2.py` y esquemas sin romper las APIs de fase 1. El archivo CSV original sigue alimentando el tablero estable. En paralelo, `syslog_receiver.py` acepta TCP solo en `127.0.0.1` como proceso independiente; `parsers.py` identifica CSV canónico, JSON con esquema, Syslog genérico y un prefijo Palo Alto Traffic sintético. `phase2_flows.py` pasa únicamente eventos normalizados al detector existente y devuelve alertas provisionales sin persistir decisiones. No hay conexión a un firewall real.
+
+`topology_graph.py` presenta el grafo calculado por `topology.py`/`exposure.py` con procedencia y filtros. `audit.py` produce ocho evaluaciones de lectura; `calibration.py` valida y versiona ajustes solo en JSON derivado local. `academy.py` y `academy_ui.py` ofrecen glosario, tutoriales y ayuda contextual. `drafts.py` conserva borradores por token en SQLite separado, con expiración; únicamente `storage.py` guarda decisiones definitivas.
+
+`assistant.py` usa herramientas de solo lectura de `assistant_tools.py` y adaptadores de `assistant_providers.py`. El fallback determinista funciona sin red. Los adaptadores externos están deshabilitados por defecto y se probaron con transportes falsos; no se afirma compatibilidad de API en producción. La UI de `app.py` monta estos componentes, mantiene el receptor separado y muestra límites explícitos. Consulte [contratos de fase 2](CONTRATOS_FASE2_WP014.md), [integración funcional](INTEGRACION_FUNCIONAL_WP022.md) y [QA](QA_FASE2_WP023.md).
+
 ## Flujo y módulos
 
 ```text
