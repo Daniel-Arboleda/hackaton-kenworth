@@ -2,15 +2,15 @@
 
 ## Estado verificado el 2026-11-23
 
-La rama WP-030 acumula los cambios de WP-025 a WP-029 para prueba. La integración formal de cada PR en `integration/sentrix-phase3` debe verificarse por separado. Ninguna prueba de esta rama se atribuye a la rama de integración antes de su merge.
+WP-025 a WP-030 se integraron mediante PR individuales en `integration/sentrix-phase3`. Los resultados de la rama integrada y los SHA de cada merge constan en el [registro de integración](INTEGRACION_FASE3_WP025_WP030.md).
 
 | Comprobación | Resultado |
 |---|---|
-| Regresión local | 98 tests correctos; 10 AppTests omitidos por ausencia de Streamlit local. |
-| Regresión Docker endurecido | 98/98 correctos en la imagen final de WP-030, red deshabilitada, raíz de solo lectura y montajes mínimos de solo lectura. |
+| Regresión local | 98 tests correctos sobre el merge WP-030; 10 AppTests omitidos por ausencia de Streamlit local. |
+| Regresión Docker endurecido | 98/98 correctos sobre el merge WP-030 de la rama integrada, red deshabilitada, raíz de solo lectura y montajes mínimos de solo lectura. |
 | P01 / P02 / P03 | 7/7, 8/8 y 12/12; ejecutores informaron originales sin cambios. |
-| E2E Docker aislado | PASS sobre código final; HTTP, decisión en SQLite tras reinicio y flujo AppTest. Proyecto `kenworth-wp012-e2e-f94a9374`, puerto efímero 50199; se detuvo sin borrar el volumen. |
-| Demo nueva | `127.0.0.1:18530` HTTP 200. Sidecar sin puertos publicados: dos Syslog sintéticos → dos eventos canónicos → dos alertas provisionales; estado preservado tras reinicio. |
+| E2E Docker aislado | PASS sobre la rama integrada; HTTP, decisión en SQLite tras reinicio y flujo AppTest. Proyecto `kenworth-wp012-e2e-0afef051`, puerto efímero 62818; se detuvo sin borrar el volumen. |
+| Demo nueva | `127.0.0.1:18531` HTTP 200 desde la rama integrada. Sidecar sin puertos publicados: dos Syslog sintéticos → dos eventos canónicos → dos alertas provisionales. |
 | Demo estable | `127.0.0.1:18513` HTTP 200; no se modificó ni detuvo. |
 | Seguridad | App y sidecar como `appuser`, raíz de solo lectura, `cap_drop: ALL`, `no-new-privileges`, tmpfs y límites. App publicada solo en loopback; sidecar sin publicación de puertos. |
 | Recursos | Muestra instantánea de app: 35,86 MiB / 768 MiB, CPU 0,00 %; sidecar: 14,8 MiB / 384 MiB, CPU 0,24 %. No es benchmark de carga. |
@@ -40,4 +40,4 @@ Las pruebas usan datos sintéticos y no atacan al host Windows. El ejecutor E2E 
 
 ## Próxima puerta de gobierno
 
-Revisar y fusionar cada PR WP-025 a WP-030 hacia `integration/sentrix-phase3` en orden, con HEAD y checks verificados y regresión posterior. Preparar el PR final de fase hacia `main` y dejarlo abierto. El propietario debe autorizar específicamente cualquier merge final a `main`.
+Los PR WP-025 a WP-030 ya se fusionaron a `integration/sentrix-phase3` en orden, con HEAD fijado y regresión posterior. Preparar el PR final de fase hacia `main` y dejarlo abierto. El propietario debe autorizar específicamente cualquier merge final a `main`.

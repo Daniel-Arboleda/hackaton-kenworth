@@ -69,6 +69,7 @@ Las pruebas Streamlit AppTest requieren Streamlit; si Python local no lo tiene, 
 - [Flujo continuo sintético](docs/FLUJO_CONTINUO_WP028.md)
 - [Recorrido guiado del grafo](docs/GRAFO_GUIADO_WP029.md)
 - [QA y entrega de Fase 3](docs/QA_ENTREGA_FASE3_WP030.md)
+- [Registro de integración de Fase 3](docs/INTEGRACION_FASE3_WP025_WP030.md)
 
 ## Demo aislada de Fase 3
 
