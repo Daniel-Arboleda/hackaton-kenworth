@@ -1,27 +1,56 @@
 # Kenworth Security Monitor
 
-MVP local Streamlit para el laboratorio sintético Estud-IA. No representa infraestructura ni incidentes reales de Kenworth.
+MVP local de apoyo a decisiones preventivas sobre el **laboratorio sintético Estud-IA**. No representa infraestructura, vulnerabilidades ni incidentes confirmados de Kenworth. Convierte eventos en alertas, contexto, exposición potencial, prioridad de revisión, propuestas de hardening y decisiones humanas registradas.
 
-## Ejecutar
+## Inicio rápido
 
-Instale Docker Desktop con Compose. Desde la raíz del repositorio:
+Requiere Docker Desktop con Compose y un puerto local libre. En PowerShell, desde la raíz del repositorio:
 
 ```powershell
-docker compose up --build -d
-docker compose ps
-docker compose logs --tail 100
+$env:PORT = '18513'
+docker compose -p kenworth-demo -f .\compose.yaml up --build -d
+docker compose -p kenworth-demo -f .\compose.yaml ps
 ```
 
-Abra http://localhost:8501. Puede cambiar el puerto con `PORT` en un archivo `.env` local. Detenga con `docker compose down`; conserve el volumen `decisions` para mantener las decisiones.
+Abra `http://localhost:18513`. El servicio se publica únicamente en `127.0.0.1`. Los recursos de prueba se montan en modo solo lectura y las decisiones se guardan en un volumen SQLite exclusivo del proyecto Compose. Para detenerlo sin borrar decisiones:
 
-## Pruebas
+```powershell
+docker compose -p kenworth-demo -f .\compose.yaml down
+```
 
-Con Python 3.10+ local: `python -m unittest discover -s tests`. Las pruebas usan solo la biblioteca estándar. No ejecutan el analizador entregado. El contenedor oficial excluye los tests.
+Si Docker informa que agotó sus pools para crear una subred nueva, use el `bridge` existente con el [override local](compose.bridge.yaml): `docker compose -p kenworth-demo -f .\compose.yaml -f .\compose.bridge.yaml up --build -d`. Conserve el mismo proyecto, puerto y volumen; deténgalo con ambos `-f` y `down` **sin `-v`**. Esta alternativa no modifica redes o volúmenes de otros proyectos.
 
-## Demostración
+## Qué permite hacer
 
-Revise AL001 con CH01 sin cierre automático. Revise AL004 y AL005 como dos señales del mismo evento E0324. Guarde decisiones justificadas para dos alertas, muestre las tres propuestas de hardening y la prueba reproducible.
+- Revisar 324 eventos, seis alertas de cuatro reglas y diez activos del laboratorio.
+- Investigar alertas con evento original, regla, activo, política, cambio coincidente, explicación y playbook propuesto.
+- Registrar una decisión humana justificada en SQLite; asignar un rol propuesto no envía notificaciones.
+- Explorar relaciones observadas `allow` y `deny`, flujos documentados no verificados y rutas hipotéticas con evidencia de cada tramo.
+- Consultar una cola de prioridad didáctica 1–9 y tres acciones de hardening propuestas.
+- Descargar un informe Markdown local generado en memoria, con procedencia y límites.
+
+## Validación
+
+```powershell
+python -m unittest discover -s tests
+.\scripts\test-p01.ps1
+.\scripts\test-p02.ps1
+.\scripts\test-p03.ps1
+.\scripts\test-all.ps1
+.\scripts\test-e2e.ps1
+```
+
+Las pruebas Streamlit AppTest requieren Streamlit; si Python local no lo tiene, se omiten allí y se ejecutan en Docker. P01 compara las referencias de 324 eventos y seis alertas; P02 verifica correlación; P03 verifica exposición y priorización. E2E usa proyecto, puerto y volumen aislados. La evidencia de ejecución se guarda en `artifacts/acceptance/`, excluida de Git. Consulte [validación](docs/VALIDACION_WP012.md).
+
+## Documentación
+
+- [Arquitectura, módulos y contratos](docs/ARQUITECTURA_FINAL.md)
+- [Instalación y manual de usuario](docs/MANUAL_INSTALACION_USUARIO.md)
+- [Informe del reto](docs/INFORME_RETO.md)
+- [Guion de demostración de 3–5 minutos](docs/GUION_DEMO.md)
+- [Dependencias, licencias y evolución](docs/DEPENDENCIAS_Y_EVOLUCION.md)
+- [Plan y estado de los incrementos](docs/PLAN_EJECUCION_WP008_WP013.md)
 
 ## Límites
 
-Sin ingestión Palo Alto nativa, escaneo, CVE, confirmación automática de incidentes, IA externa ni respuesta sobre firewall. Construir la imagen puede requerir red para descargar Python y Streamlit; el uso normal de la aplicación es local.
+Sin conexión con Kenworth ni Palo Alto real, autenticación, escaneo, explotación, cambios de firewall, bloqueos automáticos, IA generativa, tickets externos o confirmación automática de incidentes. Un `allow` observado no prueba conectividad completa; una ruta candidata no demuestra movimiento lateral. La prioridad ordena revisión, no expresa probabilidad ni severidad de incidente. **La prueba de usabilidad con otra persona sigue pendiente.** No despliegue públicamente el MVP sin controles de identidad, autorización y revisión de datos.
