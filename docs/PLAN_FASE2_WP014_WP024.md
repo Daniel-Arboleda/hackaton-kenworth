@@ -20,7 +20,7 @@ WP-014 fija interfaces Python y contratos JSON serializables para fuentes, parse
 | 019 | 014 | Receptor Syslog TCP loopback y fuente continua sintética | `agent/ingestion_engineer/wp_019` | PR #14, HEAD `bcbf292`, merge `ea24e0b9c742e7defc43dae72fc754add0ecfe28`; corrección PR #17, HEAD `b5c1094`, merge `fdb6ca992a9a1598cefed2b7239732f3df46cfdd` | 57/57 Docker tras PR #14; 67/67 conjunta tras corrección de orden | INTEGRADO_EN_FASE2 |
 | 020 | 014, 019 | Parsers agnósticos y fixtures Palo Alto | `agent/parser_engineer/wp_020` | PR #20, HEAD `ad5ba4b`, merge `5d0fed333fb0693c54cccfc0f1961716666de3ab` | 78/78 Docker post-merge; P01 7/7, P02 8/8, P03 12/12 en rama | INTEGRADO_EN_FASE2 |
 | 021 | 014 | Asistente intercambiable, herramientas read-only y fallback | `agent/ai_engineer/wp_021` | PR #21, HEAD `394c4f9`, merge `573bc24c371d50090286300338feb33e87c00ad9` | 86/86 Docker post-merge; adaptadores externos simulados | INTEGRADO_EN_FASE2 |
-| 022 | 015–021 | Flujos funcionales A–F sin perder MVP | `agent/integration_engineer/wp_022` | Pendiente | Integración y regresión | PENDIENTE |
+| 022 | 015–021 | Flujos funcionales A–F sin perder MVP | `agent/integration_engineer/wp_022` | PR #22, HEAD `85b19a5`, merge `4ee41202d4eb0716b2a6e50cd305289763b6384a` | 89/89 Docker post-merge; P01 7/7, P02 8/8, P03 12/12 en rama | INTEGRADO_EN_FASE2 |
 | 023 | 022 | QA, seguridad, visual y E2E aislado | `agent/qa_engineer/wp_023` | Pendiente | 44 baseline, P01/P02/P03 y nuevas suites | PENDIENTE |
 | 024 | 023 | Documentación, informe y PR final a `main` | `agent/release_engineer/wp_024` | Pendiente | Reproducción y revisión | PENDIENTE |
 
