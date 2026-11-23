@@ -12,7 +12,7 @@ WP-014 fija interfaces Python y contratos JSON serializables para fuentes, parse
 
 | WP | Dependencia | Alcance y criterio de aceptación | Rama | PR / HEAD / merge | Pruebas y evidencia | Estado |
 |---|---|---|---|---|---|---|
-| 014 | Baseline | Interfaces, esquemas, validación, compatibilidad y ADR | `agent/architecture/wp_014` | Pendiente | Contratos y regresión P01/P02/P03 | PENDIENTE |
+| 014 | Baseline | Interfaces, esquemas, validación, compatibilidad y ADR | `agent/architecture/wp_014` | PR #12, HEAD `5da3630`, merge `bc77553c584750747c72908d32830e68ddea7323` | 49/49 Docker; P01 7/7, P02 8/8, P03 12/12 | INTEGRADO_EN_FASE2 |
 | 015 | 014 | Navegación, componentes, estados y dashboard profesional | `agent/frontend_ux/wp_015` | Pendiente | AppTest, accesibilidad y regresión | PENDIENTE |
 | 016 | 014, 015 | Grafo interactivo con procedencia y leyenda | `agent/topology_visual/wp_016` | Pendiente | Nodos, filtros, evidencia y rutas | PENDIENTE |
 | 017 | 014 | Academia, ayuda contextual y borradores locales aislados | `agent/academy/wp_017` | Pendiente | Estado de formularios y límites de acceso | PENDIENTE |
