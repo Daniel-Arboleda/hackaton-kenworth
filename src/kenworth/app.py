@@ -10,21 +10,30 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 
 from kenworth.correlation import investigate
+from kenworth.academy_ui import local_draft_scope, render_academy, render_context_help
+from kenworth.assistant import AssistantService
+from kenworth.audit_ui import render_audit_center
 from kenworth.detection import detect
+from kenworth.drafts import LocalDraftStore
 from kenworth.explanations import explain_alert
 from kenworth.exposure import analyze_exposure
 from kenworth.hardening import plan
 from kenworth.ingestion import load_context, load_events
 from kenworth.playbooks import playbook_for
+from kenworth.parsers import detect_format, parse_message
+from kenworth.phase2_flows import inspect_messages
 from kenworth.prioritization import build_priority_queue
 from kenworth.reports import build_report
 from kenworth.storage import DISPOSITIONS, ROLES, connect, get, save
 from kenworth.topology import analyze_asset, build_topology
+from kenworth.topology_graph import render_topology_graph
+from kenworth.contracts_v2 import SourceMessage
 from kenworth.ui_components import NAVIGATION, render_fields, render_header, render_kpis, render_panel, render_shell, render_status
 
 PROJECT = Path(__file__).resolve().parents[2]
 RESOURCES = Path(os.getenv("KENWORTH_RESOURCES", PROJECT / "Kenworth_Recursos_de_Prueba"))
 DATABASE = Path(os.getenv("KENWORTH_DB", PROJECT / ".data/decisions.sqlite"))
+DRAFT_DATABASE = Path(os.getenv("KENWORTH_DRAFT_DB", DATABASE.with_name("drafts.sqlite")))
 EVIDENCE = Path(os.getenv("KENWORTH_ACCEPTANCE", PROJECT / "artifacts/acceptance/p01"))
 SECTION_HELP = {
     "Panorama": "Señales y decisiones basadas exclusivamente en el archivo sintético cargado.",
@@ -37,6 +46,10 @@ SECTION_HELP = {
     "Reporte": "Exportación local en memoria con fuentes y limitaciones.",
     "Validación": "Resultados del ejecutor externo cuando exista evidencia accesible.",
     "Demo guiada": "Recorrido de alerta, evidencia, contexto y decisión humana.",
+    "Asistente IA": "Borradores con evidencia consultada y fallback determinista; sin acciones automáticas.",
+    "Fuentes y conectores": "Parsers sintéticos y receptor Syslog local opcional.",
+    "Centro de auditoría": "Comprobaciones y calibración derivada de laboratorio.",
+    "Guía rápida": "Conceptos, tutoriales y ayuda contextual del laboratorio.",
 }
 
 
@@ -136,14 +149,51 @@ def investigate_and_decide(alert, events, context, db, prefix):
                            ("Justificación", previous["justificacion"])))
     else:
         st.info("Pendiente de revisión: todavía no hay decisión guardada.")
+    alert_id = alert["alerta_id"]
+    draft_keys = {name: f"{prefix}_{alert_id}_{name}" for name in
+                  ("state", "disposition", "recipient_role", "responsible", "justification")}
+    defaults = {"state": previous["estado"] if previous and previous["estado"] in ("Revisar", "Cerrar", "Escalar") else "Revisar",
+                "disposition": previous["disposicion"] if previous and previous["disposicion"] in DISPOSITIONS else DISPOSITIONS[0],
+                "recipient_role": previous["rol_destinatario"] if previous and previous["rol_destinatario"] in ROLES else ROLES[0],
+                "responsible": previous["responsable"] if previous else "",
+                "justification": previous["justificacion"] if previous else ""}
+    draft_store = LocalDraftStore(DRAFT_DATABASE, local_demo=True)
+    scope = local_draft_scope()
+    recovered_draft = draft_store.load(scope, f"alert:{alert_id}") or {}
+    for name, key in draft_keys.items():
+        st.session_state.setdefault(key, recovered_draft.get(name, defaults[name]))
+    st.caption("Borrador local aislado por clave de esta URL; no comparta el enlace. No es una decisión.")
+    if st.button("Recuperar borrador", key=f"draft_load_{prefix}_{alert_id}"):
+        loaded = draft_store.load(scope, f"alert:{alert_id}")
+        if loaded:
+            for name, key in draft_keys.items():
+                if name in loaded:
+                    st.session_state[key] = loaded[name]
+            st.success("Borrador recuperado. Revíselo antes de guardar una decisión.")
+            st.rerun()
+        else:
+            st.info("No hay borrador vigente para esta sesión local.")
+    if st.button("Descartar borrador", key=f"draft_delete_{prefix}_{alert_id}"):
+        draft_store.delete(scope, f"alert:{alert_id}")
+        st.info("Borrador descartado; la decisión guardada no cambió.")
     with st.form(f"{prefix}_decision"):
         states = ("Revisar", "Cerrar", "Escalar")
-        state = st.selectbox("Estado", states, index=states.index(previous["estado"]) if previous and previous["estado"] in states else 0)
-        disposition = st.selectbox("Disposición del analista", DISPOSITIONS, index=DISPOSITIONS.index(previous["disposicion"]) if previous and previous["disposicion"] in DISPOSITIONS else 0)
-        role = st.selectbox("Rol destinatario", ROLES, index=ROLES.index(previous["rol_destinatario"]) if previous and previous["rol_destinatario"] in ROLES else 0)
-        responsible = st.text_input("Responsable identificado (opcional)", value=previous["responsable"] if previous else "")
-        reason = st.text_area("Justificación y evidencia adicional", value=previous["justificacion"] if previous else "")
-        if st.form_submit_button("Guardar decisión"):
+        state = st.selectbox("Estado", states, key=draft_keys["state"])
+        disposition = st.selectbox("Disposición del analista", DISPOSITIONS, key=draft_keys["disposition"])
+        role = st.selectbox("Rol destinatario", ROLES, key=draft_keys["recipient_role"])
+        responsible = st.text_input("Responsable identificado (opcional)", key=draft_keys["responsible"])
+        reason = st.text_area("Justificación y evidencia adicional", key=draft_keys["justification"])
+        save_draft = st.form_submit_button("Guardar borrador")
+        save_decision = st.form_submit_button("Guardar decisión")
+        if save_draft:
+            try:
+                draft_store.save(scope, f"alert:{alert_id}", {"alert_id": alert_id, "state": state,
+                                 "disposition": disposition, "recipient_role": role,
+                                 "responsible": responsible, "justification": reason})
+                st.success("Borrador guardado; no se creó una decisión definitiva.")
+            except ValueError as error:
+                st.error(str(error))
+        if save_decision:
             try:
                 save(db, alert["alerta_id"], state, reason, disposition, role, responsible)
                 st.success("Decisión guardada en SQLite. No se enviaron notificaciones ni acciones de contención.")
@@ -414,6 +464,43 @@ def demo_view(context, events, alerts, topology, db):
     st.dataframe(plan(context["findings"]), use_container_width=True, hide_index=True)
 
 
+def integrations_view(context):
+    st.header("Fuentes y conectores sintéticos")
+    st.caption("El CSV de archivo sigue siendo la fuente de la demo. El receptor Syslog solo funciona como proceso local independiente en loopback.")
+    st.code("python -m kenworth.syslog_receiver --db .data/syslog-lab.sqlite --port 18519", language="powershell")
+    sample = st.text_area("Mensaje sintético para inspeccionar formato", value="<134>1 2026-11-23T08:00:00Z lab app - - - evento_id=E9001")
+    if st.button("Analizar muestra sin ingerir"):
+        try:
+            message = SourceMessage("ui_lab", "SAMPLE-1", "2026-11-23T08:00:00Z", sample)
+            matches = detect_format(message)
+            result = parse_message(message)
+            flow = inspect_messages([message], context["parameters"])
+            st.write("**Firmas:**", [row.parser_id for row in matches if row.matched])
+            st.write("**Estado:**", result.status)
+            st.json(result)
+            st.write("**Alertas provisionales:**", flow["alerts"])
+            st.caption(flow["limitations"])
+        except (ValueError, TypeError) as error:
+            st.error(str(error))
+    st.caption("La vista no inicia puertos, no conecta firewalls y no convierte muestras en alertas guardadas.")
+
+
+def assistant_view(context, events, alerts, topology, exposure, queue):
+    st.header("Asistente de investigación")
+    st.caption("Fallback determinista local. Ningún proveedor externo está configurado ni recibe datos.")
+    selected = st.selectbox("Alerta para borrador", [alert["alerta_id"] for alert in alerts])
+    question = st.text_area("Pregunta al asistente", value="¿Qué evidencia falta antes de decidir?")
+    if st.button("Generar borrador verificable"):
+        try:
+            result = AssistantService(events, alerts, context, topology, exposure, queue).ask_alert(selected, question)
+            st.write("**Interpretación propuesta:**", result["draft"]["interpretation"])
+            st.write("**Información faltante:**", result["draft"]["missing_information"])
+            st.write("**Evidencia:**", result["draft"]["evidence"])
+            st.caption("Borrador sujeto a revisión humana. No se guarda como decisión ni ejecuta contención.")
+        except ValueError as error:
+            st.error(str(error))
+
+
 def phase2_placeholder(section):
     if section == "Fuentes y conectores":
         render_status("Modo archivo")
@@ -442,6 +529,7 @@ def main():
     st.sidebar.divider()
     st.sidebar.caption("Modo archivo · sin receptor activo")
     render_header(area, section, SECTION_HELP.get(section, "Módulo de fase 2 en preparación."))
+    render_context_help(section)
     st.warning("Laboratorio sintético de Estud-IA. No representa infraestructura, vulnerabilidades ni incidentes reales de Kenworth.")
     try:
         context, events, alerts, topology = load_dashboard(str(RESOURCES))
@@ -461,7 +549,16 @@ def main():
         elif section == "Alertas":
             alert_explorer(context, events, alerts, db)
         elif section == "Topología":
+            render_topology_graph(topology, exposure, context)
             topology_view(topology, context)
+        elif section == "Asistente IA":
+            assistant_view(context, events, alerts, topology, exposure, queue)
+        elif section == "Fuentes y conectores":
+            integrations_view(context)
+        elif section == "Centro de auditoría":
+            render_audit_center(context, events, topology, exposure, queue)
+        elif section == "Guía rápida":
+            render_academy()
         elif section == "Rutas hipotéticas":
             routes_view(exposure)
         elif section == "Hardening":
