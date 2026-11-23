@@ -20,13 +20,24 @@ from kenworth.prioritization import build_priority_queue
 from kenworth.reports import build_report
 from kenworth.storage import DISPOSITIONS, ROLES, connect, get, save
 from kenworth.topology import analyze_asset, build_topology
+from kenworth.ui_components import NAVIGATION, render_fields, render_header, render_kpis, render_panel, render_shell, render_status
 
 PROJECT = Path(__file__).resolve().parents[2]
 RESOURCES = Path(os.getenv("KENWORTH_RESOURCES", PROJECT / "Kenworth_Recursos_de_Prueba"))
 DATABASE = Path(os.getenv("KENWORTH_DB", PROJECT / ".data/decisions.sqlite"))
 EVIDENCE = Path(os.getenv("KENWORTH_ACCEPTANCE", PROJECT / "artifacts/acceptance/p01"))
-SECTIONS = ("Resumen", "Prioridades", "Riesgos por activo", "Alertas", "Topología",
-            "Rutas hipotéticas", "Hardening", "Reporte", "Validación", "Demo guiada")
+SECTION_HELP = {
+    "Panorama": "Señales y decisiones basadas exclusivamente en el archivo sintético cargado.",
+    "Prioridades": "Orden de revisión calculado por el backend; no es severidad de incidente.",
+    "Riesgos por activo": "Criticidad, hallazgos y relaciones con procedencia verificable.",
+    "Alertas": "Investigue cada señal antes de registrar una decisión humana.",
+    "Topología": "Relaciones observadas y documentadas, siempre etiquetadas por evidencia.",
+    "Rutas hipotéticas": "Candidatos de revisión, sin afirmar conectividad o movimiento lateral.",
+    "Hardening": "Medidas preventivas propuestas que requieren aprobación y verificación.",
+    "Reporte": "Exportación local en memoria con fuentes y limitaciones.",
+    "Validación": "Resultados del ejecutor externo cuando exista evidencia accesible.",
+    "Demo guiada": "Recorrido de alerta, evidencia, contexto y decisión humana.",
+}
 
 
 @st.cache_data
@@ -44,11 +55,12 @@ def current_decision(db, alert_id):
 
 
 def summary(context, events, alerts, db, exposure, queue):
-    st.header("Resumen operativo")
+    st.header("Panorama operativo")
     decisions = [current_decision(db, alert["alerta_id"]) for alert in alerts]
     values = (len(events), len(alerts), len(context["assets"]), sum(d["estado"] != "Pendiente" for d in decisions))
-    for column, title, value in zip(st.columns(4), ("Eventos", "Alertas", "Activos", "Con decisión humana"), values):
-        column.metric(title, value)
+    render_kpis(tuple(zip(("Eventos", "Alertas", "Activos", "Con decisión humana"), values)))
+    render_status("Modo archivo · receptor continuo no configurado")
+    st.caption("Fuente: 02_Datos/eventos_normalizados.csv. Última recepción en vivo: no disponible.")
     st.caption("Conteos del CSV, motor de detección, inventario y SQLite. Una alerta no es un incidente confirmado.")
     left, right = st.columns(2)
     with left:
@@ -59,6 +71,10 @@ def summary(context, events, alerts, db, exposure, queue):
         st.subheader("Distribución de eventos")
         st.dataframe([{"Tipo": name, "Eventos": count} for name, count in sorted(Counter(e["tipo"] for e in events).items())],
                      use_container_width=True, hide_index=True)
+    st.subheader("Línea de tiempo del archivo")
+    hourly = Counter(event["fecha_hora"][:13] for event in events)
+    st.bar_chart({"Eventos": dict(sorted(hourly.items()))})
+    st.caption("Conteos por hora del CSV sintético. No representan recepción continua ni tendencia futura.")
     st.subheader("Estado de revisión")
     st.dataframe([{"Estado": name, "Alertas": count} for name, count in sorted(Counter(d["estado"] for d in decisions).items())],
                  use_container_width=True, hide_index=True)
@@ -77,18 +93,29 @@ def summary(context, events, alerts, db, exposure, queue):
 def investigate_and_decide(alert, events, context, db, prefix):
     evidence = investigate(alert, events, context)
     st.subheader(f"{alert['alerta_id']} · {alert['tipo']}")
-    st.write(f"**Evento:** {alert['evento_id']} · **Regla registrada:** {evidence['event']['regla_id']}")
-    st.write("**Motivo:**", alert["motivo"])
+    render_panel("Señal observada", alert["motivo"])
+    render_fields((("Evento", alert["evento_id"]), ("Regla registrada", evidence["event"]["regla_id"]),
+                   ("Fecha del evento", alert["fecha_hora"])))
     st.caption("La alerta es una señal; la hipótesis requiere revisión humana. No se confirma un incidente.")
     with st.expander("Evento original y evidencia", expanded=True):
-        st.json(evidence["event"])
+        event = evidence["event"]
+        render_fields((("Tipo", event["tipo"]), ("Origen", event["origen_ip"]),
+                       ("Destino", event["destino_ip"]), ("Puerto", event["puerto_destino"]),
+                       ("Acción", event["accion"]), ("Resultado", event["resultado"]),
+                       ("Bytes", event["bytes"])))
         st.caption("Fuente: 02_Datos/eventos_normalizados.csv")
+    with st.expander("Campos técnicos completos"):
+        st.json(event)
     with st.expander("Activos, política y cambios", expanded=True):
-        st.write("**Origen:**", evidence["source"] or "IP externa o no inventariada")
-        st.write("**Destino:**", evidence["destination"] or "IP externa o no inventariada")
-        st.write("**Política descriptiva:**", evidence["policy"] or "No encontrada")
-        st.write("**Cambio coincidente:**", evidence["matching_changes"] or "Ninguno")
+        source, destination, policy = evidence["source"], evidence["destination"], evidence["policy"]
+        render_fields((("Activo origen", source["nombre_prueba"] if source else "IP no inventariada"),
+                       ("Activo destino", destination["nombre_prueba"] if destination else "IP no inventariada"),
+                       ("Política descriptiva", f"{policy['regla_id']} · {policy['observacion']}" if policy else "No encontrada"),
+                       ("Cambio coincidente", ", ".join(row["cambio_id"] for row in evidence["matching_changes"]) or "Ninguno")))
         st.caption("Fuentes: inventario_activos.csv, politicas_firewall_prueba.csv y cambios_autorizados.csv. CH01 no cierra automáticamente la alerta.")
+    with st.expander("Contexto técnico completo"):
+        st.json({"origen": source, "destino": destination, "politica": policy,
+                 "cambios": evidence["matching_changes"]})
     explanation = explain_alert(alert, events, context)
     playbook = playbook_for(alert, events, context)
     with st.expander("Explicación contextual y playbook propuesto"):
@@ -102,7 +129,11 @@ def investigate_and_decide(alert, events, context, db, prefix):
     previous = get(db, alert["alerta_id"])
     st.subheader("Decisión humana")
     if previous:
-        st.write("**Decisión guardada:**", previous)
+        render_panel("Decisión guardada", f"{previous['estado']} · {previous['disposicion']} · {previous['actualizado']}")
+        with st.expander("Detalles de la decisión"):
+            render_fields((("Rol destinatario", previous["rol_destinatario"]),
+                           ("Responsable", previous["responsable"] or "No especificado"),
+                           ("Justificación", previous["justificacion"])))
     else:
         st.info("Pendiente de revisión: todavía no hay decisión guardada.")
     with st.form(f"{prefix}_decision"):
@@ -185,8 +216,15 @@ def asset_risk_view(exposure, queue, context, events, alerts):
     asset_priority = next(row["priority"] for row in queue["asset_priorities"] if row["asset_id"] == selected)
     st.write(f"**Prioridad de revisión calculada:** {asset_priority['level']} ({asset_priority['value']}/9)")
     st.caption(f"{asset_priority['impact_reason']}; {asset_priority['exposure_reason']}")
-    st.write("**Hallazgos:**", asset["findings"] or "Ninguno registrado")
-    st.write(f"**Relaciones:** {len(asset['observed_allowed'])} allow observadas; {len(asset['observed_denied'])} deny; {len(asset['documented_unverified'])} documentadas sin verificar.")
+    render_kpis((("Allow observadas", len(asset["observed_allowed"])),
+                 ("Deny observadas", len(asset["observed_denied"])),
+                 ("Documentales", len(asset["documented_unverified"]))))
+    st.subheader("Hallazgos del inventario")
+    if asset["findings"]:
+        for finding in asset["findings"]:
+            render_panel(f"{finding['hallazgo_id']} · {finding['categoria']}", finding["evidencia"])
+    else:
+        st.info("Sin hallazgos registrados para este activo.")
     asset_ip = next(row["ip_prueba"] for row in context["assets"] if row["activo_id"] == selected)
     related_events = [event for event in events
                       if asset_ip in (event["origen_ip"], event["destino_ip"])]
@@ -194,12 +232,23 @@ def asset_risk_view(exposure, queue, context, events, alerts):
     related_alerts = [alert for alert in alerts if alert["evento_id"] in event_ids]
     st.write("**Alertas relacionadas:**", ", ".join(alert["alerta_id"] for alert in related_alerts) or "Ninguna")
     policy_ids = sorted({event["regla_id"] for event in related_events})
-    st.write("**Políticas registradas en eventos:**", [row for row in context["policies"] if row["regla_id"] in policy_ids] or "Ninguna")
+    st.subheader("Políticas registradas en eventos")
+    policies = [row for row in context["policies"] if row["regla_id"] in policy_ids]
+    if policies:
+        for policy in policies:
+            render_panel(policy["regla_id"], f"{policy['origen']} → {policy['destino']} · {policy['servicio']} · {policy['accion']}. {policy['observacion']}")
+    else:
+        st.info("Sin políticas asociadas a eventos de este activo.")
     ranked = [item for group in (queue["investigations"], queue["hardening"]) for item in group
               if item["asset_id"] == selected]
-    st.write("**Prioridades y acciones propuestas:**", [
-        {"ID": item["id"], "Nivel": item["priority"]["level"], "Puntaje": item["priority"]["value"],
-         "Acción": item["action"], "Evidencia": item["evidence"]} for item in ranked] or "Sin prioridad en la cola actual")
+    st.subheader("Acciones propuestas")
+    if ranked:
+        for item in ranked:
+            render_panel(f"{item['id']} · {item['priority']['level']} ({item['priority']['value']}/9)", item["action"])
+        with st.expander("Evidencia y datos de la cola"):
+            st.json([{"id": item["id"], "evidencia": item["evidence"], "prioridad": item["priority"]} for item in ranked])
+    else:
+        st.info("Sin acciones de la cola actual para este activo.")
     st.caption("La cola agrupa alertas por evento. Las relaciones y hallazgos se conservan con procedencia en Topología y Prioridades.")
 
 
@@ -215,8 +264,13 @@ def routes_view(exposure):
         selected = st.selectbox("Consultar ruta candidata", range(len(paths)),
                                 format_func=lambda index: " → ".join(paths[index]["asset_ids"]))
         path = paths[selected]
-        st.write("**Tramos y evidencia:**", path["hops"])
+        st.subheader("Tramos observados")
+        for index, hop in enumerate(path["hops"], start=1):
+            render_panel(f"Tramo {index} · {hop['source']} → {hop['target']}",
+                         f"Puerto {hop['port']} · {hop['action']} observado · eventos {', '.join(hop['event_ids'])}")
         st.write("**Condiciones no verificadas:**", path["conditions_unverified"])
+        with st.expander("Detalle técnico de los tramos"):
+            st.json(path["hops"])
     st.subheader("Hipótesis de privilegios")
     st.dataframe(exposure["vertical_hypotheses"], use_container_width=True, hide_index=True)
     st.caption("NO_EVALUABLE_CON_EVIDENCIA_ACTUAL indica que faltan datos de identidades, permisos y autenticación.")
@@ -360,14 +414,35 @@ def demo_view(context, events, alerts, topology, db):
     st.dataframe(plan(context["findings"]), use_container_width=True, hide_index=True)
 
 
+def phase2_placeholder(section):
+    if section == "Fuentes y conectores":
+        render_status("Modo archivo")
+        render_panel("Fuente activa", "CSV sintético local. No hay receptor Syslog ni conector Palo Alto activo en este incremento.")
+        st.info("La configuración de fuentes continuas se incorporará después de validar receptor, parser y estado de ingesta.")
+    elif section == "Centro de auditoría":
+        render_panel("Auditorías y calibración", "Las definiciones y aprobaciones de laboratorio se integrarán en un incremento posterior. Ninguna auditoría está ejecutada aquí.")
+        st.info("Consulte Validación para P01; no hay aplicación automática de cambios de configuración.")
+    elif section == "Guía rápida":
+        render_panel("Cómo investigar", "Abra Investigaciones → Alertas, seleccione AL001 y compare E0321, R03 y CH01. El cambio aporta contexto; no cierra la alerta.")
+        render_panel("Conceptos", "Una alerta es una señal. Una ruta hipotética es una secuencia de observaciones allow; no demuestra conectividad ni movimiento lateral.")
+        st.info("La biblioteca de aprendizaje ampliada se integrará en un incremento posterior.")
+    else:
+        render_status("Laboratorio local")
+        render_panel("Estado de ejecución", "Datos sintéticos de archivo; SQLite local para decisiones humanas. No hay autenticación empresarial ni recepción continua activa.")
+        st.caption("No se envían eventos a servicios externos ni se ejecutan controles desde esta interfaz.")
+
+
 def main():
     st.set_page_config(page_title="Kenworth Security Monitor", page_icon="🛡️", layout="wide")
-    st.markdown("<style>.block-container{padding-top:1.5rem;max-width:1250px}h1{letter-spacing:-.025em}.stMetric{border:1px solid #d7dde5;border-radius:10px;padding:12px}</style>", unsafe_allow_html=True)
-    st.title("Kenworth Security Monitor")
+    render_shell()
+    st.sidebar.markdown("### Kenworth Security Monitor")
+    st.sidebar.caption("Laboratorio sintético · decisiones humanas")
+    area = st.sidebar.selectbox("Área", tuple(NAVIGATION), key="area_nav")
+    section = st.sidebar.selectbox("Vista", NAVIGATION[area], key="view_nav")
+    st.sidebar.divider()
+    st.sidebar.caption("Modo archivo · sin receptor activo")
+    render_header(area, section, SECTION_HELP.get(section, "Módulo de fase 2 en preparación."))
     st.warning("Laboratorio sintético de Estud-IA. No representa infraestructura, vulnerabilidades ni incidentes reales de Kenworth.")
-    st.sidebar.title("Navegación")
-    section = st.sidebar.radio("Sección", SECTIONS)
-    st.sidebar.caption("MVP local · análisis y decisiones humanas")
     try:
         context, events, alerts, topology = load_dashboard(str(RESOURCES))
         exposure = analyze_exposure(topology, context)
@@ -377,7 +452,7 @@ def main():
         st.error(f"No se pudieron cargar los datos del laboratorio: {error}")
         st.stop()
     try:
-        if section == "Resumen":
+        if section == "Panorama":
             summary(context, events, alerts, db, exposure, queue)
         elif section == "Prioridades":
             priority_view(queue, db)
@@ -395,8 +470,10 @@ def main():
             report_view(context, events, alerts, exposure, queue, db)
         elif section == "Validación":
             validation_view()
-        else:
+        elif section == "Demo guiada":
             demo_view(context, events, alerts, topology, db)
+        else:
+            phase2_placeholder(section)
     finally:
         db.close()
     st.divider()
