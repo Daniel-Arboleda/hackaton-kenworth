@@ -13,11 +13,11 @@ WP-014 fija interfaces Python y contratos JSON serializables para fuentes, parse
 | WP | Dependencia | Alcance y criterio de aceptación | Rama | PR / HEAD / merge | Pruebas y evidencia | Estado |
 |---|---|---|---|---|---|---|
 | 014 | Baseline | Interfaces, esquemas, validación, compatibilidad y ADR | `agent/architecture/wp_014` | PR #12, HEAD `5da3630`, merge `bc77553c584750747c72908d32830e68ddea7323` | 49/49 Docker; P01 7/7, P02 8/8, P03 12/12 | INTEGRADO_EN_FASE2 |
-| 015 | 014 | Navegación, componentes, estados y dashboard profesional | `agent/frontend_ux/wp_015` | Pendiente | AppTest, accesibilidad y regresión | PENDIENTE |
+| 015 | 014 | Navegación, componentes, estados y dashboard profesional | `agent/frontend_ux/wp_015` | PR #15, HEAD `f7cbc42`, merge `0c2968a7322a1dcfe1f47c5c6c860bd5a01895b7` | 50/50 Docker en rama; 67/67 conjunta tras PR #17 | INTEGRADO_EN_FASE2 |
 | 016 | 014, 015 | Grafo interactivo con procedencia y leyenda | `agent/topology_visual/wp_016` | Pendiente | Nodos, filtros, evidencia y rutas | PENDIENTE |
-| 017 | 014 | Academia, ayuda contextual y borradores locales aislados | `agent/academy/wp_017` | Pendiente | Estado de formularios y límites de acceso | PENDIENTE |
-| 018 | 014 | Auditorías y calibración local controlada | `agent/audit_engineer/wp_018` | Pendiente | Estados, R03, invariantes y reversión | PENDIENTE |
-| 019 | 014 | Receptor Syslog TCP loopback y fuente continua sintética | `agent/ingestion_engineer/wp_019` | Pendiente | Recepción, límites, deduplicación y recuperación | PENDIENTE |
+| 017 | 014 | Academia, ayuda contextual y borradores locales aislados | `agent/academy/wp_017` | PR #13, HEAD `3ae966d`, merge `9cf883912ef13b4b8e457f71782009a7abb552b9` | 53/53 Docker post-merge; P01 7/7, P02 8/8, P03 12/12 | INTEGRADO_EN_FASE2 |
+| 018 | 014 | Auditorías y calibración local controlada | `agent/audit_engineer/wp_018` | PR #16, HEAD `58f9f76`, merge `ca3572b395047b0cded0c13e5c886fe71ef11d39` | 58/58 Docker en rama; 9/9 específicos post-merge; 67/67 conjunta | INTEGRADO_EN_FASE2 |
+| 019 | 014 | Receptor Syslog TCP loopback y fuente continua sintética | `agent/ingestion_engineer/wp_019` | PR #14, HEAD `bcbf292`, merge `ea24e0b9c742e7defc43dae72fc754add0ecfe28`; corrección PR #17, HEAD `b5c1094`, merge `fdb6ca992a9a1598cefed2b7239732f3df46cfdd` | 57/57 Docker tras PR #14; 67/67 conjunta tras corrección de orden | INTEGRADO_EN_FASE2 |
 | 020 | 014, 019 | Parsers agnósticos y fixtures Palo Alto | `agent/parser_engineer/wp_020` | Pendiente | Detección de formato, trazabilidad y errores | PENDIENTE |
 | 021 | 014 | Asistente intercambiable, herramientas read-only y fallback | `agent/ai_engineer/wp_021` | Pendiente | Mock local, allowlist, inyección y límites | PENDIENTE |
 | 022 | 015–021 | Flujos funcionales A–F sin perder MVP | `agent/integration_engineer/wp_022` | Pendiente | Integración y regresión | PENDIENTE |
