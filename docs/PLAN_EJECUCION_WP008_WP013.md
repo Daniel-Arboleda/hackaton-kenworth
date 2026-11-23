@@ -1,6 +1,6 @@
 # Plan de ejecución WP-008 a WP-013
 
-Registro maestro del programa sobre recursos exclusivamente sintéticos. Esta revisión se inició desde `origin/main` `8a2692576561a73ea09c6aed39a655ee01f0311e`, después de la fusión verificada de PR #4. La base de WP-010 es `02aebf47df9f3bf2a430f62fc240afc2bc7f70f0`, después de integrar WP-009 y WP-006. La base de WP-011 es `2973034fe0ffd3ecb679d7f17b35b19bdecb0da6`, tras integrar WP-010. Un estado de desarrollo no equivale a integración.
+Registro maestro del programa sobre recursos exclusivamente sintéticos. La entrega WP-013 se integró en `main` mediante PR #10, merge `28e90282457bd421d54498e4be17d445c2168c4c`. Esta revisión se inició desde `origin/main` `8a2692576561a73ea09c6aed39a655ee01f0311e`, después de la fusión verificada de PR #4. La base de WP-010 es `02aebf47df9f3bf2a430f62fc240afc2bc7f70f0`, después de integrar WP-009 y WP-006. La base de WP-011 es `2973034fe0ffd3ecb679d7f17b35b19bdecb0da6`, tras integrar WP-010. Un estado de desarrollo no equivale a integración.
 
 | WP | Dependencia | Criterio de aceptación | PR / SHA | Pruebas y evidencia | Estado |
 |---|---|---|---|---|---|
@@ -10,14 +10,14 @@ Registro maestro del programa sobre recursos exclusivamente sintéticos. Esta re
 | 010 | 006 + 009 | Cola priorizada con matriz 1–3 × 1–3 y evidencia | PR #7; merge `2973034fe0ffd3ecb679d7f17b35b19bdecb0da6` | Regresión post-merge verificada por integración | INTEGRADO |
 | 011 | 010 | Dashboard proactivo, reportes y AppTest | PR #8; merge `e85950783f060c8b5cb38beaf9332b1208bfa0a2` | Regresión post-merge verificada por integración | INTEGRADO |
 | 012 | 011 | P01, P02, P03, E2E y revisión de seguridad | PR #9; merge `053c98f1f0de27447c8c3e1b35ffb210db403d97` | P02 8/8, P03 12/12, E2E aislado PASS; prueba humana pendiente | INTEGRADO, prueba humana PENDIENTE |
-| 013 | 012 | Documentación final y guion demostrable | Rama `agent/release_engineer/wp_013`; PR y HEAD al cierre | 44 descubiertas localmente (7 AppTest omitidas sin Streamlit), P01 7/7, P02 8/8, P03 12/12, E2E aislado PASS; enlace y Compose válidos | EN DESARROLLO |
+| 013 | 012 | Documentación final y guion demostrable | PR #10, HEAD `9444086`, merge `28e90282457bd421d54498e4be17d445c2168c4c` | 44/44 en Docker, P01 7/7, P02 8/8, P03 12/12, E2E aislado PASS y demo HTTP 200 | INTEGRADO; prueba humana PENDIENTE |
 
 ## Riesgos y bloqueos
 
 - No se observó una rama publicada verificable de Alejandra durante WP-008. Su trabajo no fue modificado ni fusionado.
-- Los cuatro tests Streamlit se omiten en Python local sin la dependencia; se ejecutaron y aprobaron en Docker en WP-008.
+- Las siete pruebas Streamlit y E2E se omiten en Python local sin Streamlit; las 44 pruebas de la suite final se ejecutaron y aprobaron en Docker.
 - No hay checks registrados en PR #4; cero checks no se interpretó como pruebas aprobadas. Se ejecutaron pruebas locales y Docker explícitamente.
-- Para WPs pendientes, cada PR requiere verificación de HEAD, checks, revisiones, protección, mergeability y regresión post-merge antes de marcar INTEGRADO.
+- Para cada PR se verificaron HEAD, alcance, checks, revisiones, mergeability y regresión; los futuros PR requieren verificación de HEAD, checks, revisiones, protección, mergeability y regresión post-merge antes de marcar INTEGRADO.
 - En WP-012, Docker agotó los pools para nuevas subredes. El E2E usa el `bridge` existente con proyecto, puerto y volumen exclusivos; no altera otros entornos. La prueba con otro usuario queda pendiente de un participante real.
 - WP-013 no crea etiqueta de versión ni afirma prueba humana aprobada. La licencia de distribución del proyecto y la revisión de licencias de dependencias requieren decisión y auditoría posteriores.
 
