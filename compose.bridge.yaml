@@ -1,3 +1,5 @@
 services:
   app:
     network_mode: bridge
+  collector:
+    network_mode: bridge

@@ -8,6 +8,12 @@ WP-014 fijó `contracts_v2.py` y esquemas sin romper las APIs de fase 1. El arch
 
 `assistant.py` usa herramientas de solo lectura de `assistant_tools.py` y adaptadores de `assistant_providers.py`. El fallback determinista funciona sin red. Los adaptadores externos están deshabilitados por defecto y se probaron con transportes falsos; no se afirma compatibilidad de API en producción. La UI de `app.py` monta estos componentes, mantiene el receptor separado y muestra límites explícitos. Consulte [contratos de fase 2](CONTRATOS_FASE2_WP014.md), [integración funcional](INTEGRACION_FUNCIONAL_WP022.md) y [QA](QA_FASE2_WP023.md).
 
+## Extensión SENTRIX de Fase 3
+
+El contenedor web conserva el motor determinista y un volumen SQLite de laboratorio. El perfil Compose opcional `collector` ejecuta el receptor Syslog loopback y `continuous_pipeline.py` en un segundo contenedor con el mismo volumen, sin publicar su puerto. El pipeline guarda cursor, estado de parseo, eventos canónicos y alertas provisionales; `app.py` lee una instantánea de esos conteos en Panorama. La cola en memoria regula la entrada y puede rechazar mensajes cuando se llena. El detalle de investigación del dashboard continúa basado en el archivo sintético hasta una integración posterior.
+
+`operations.py` agrega prioridades y decisiones humanas locales en una vista de solo lectura. `investigation_journey.py` conecta alertas con relaciones y hallazgos existentes, sin inferir aristas. `assistant_runtime.py` habilita un modelo HTTP loopback solo mediante configuración explícita; `AssistantService` conserva el fallback y las herramientas de lectura. Consulte [modelo de amenazas](MODELO_AMENAZAS_WP025.md) y [QA de Fase 3](QA_ENTREGA_FASE3_WP030.md). La red bridge del contenedor no bloquea egress por sí misma.
+
 ## Flujo y módulos
 
 ```text

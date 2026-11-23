@@ -87,9 +87,17 @@ def main():
         image = command(compose + ['images', '-q', 'app'], env=env)
         if not image:
             raise AssertionError('No se pudo identificar la imagen Compose')
-        test_output = command(['docker', 'run', '--rm', '--mount',
-                               f'type=bind,source={ROOT},target=/qa,readonly',
-                               '-e', 'PYTHONPATH=/qa/src', image,
+        mounts = [item for source, target in (
+            ('src', '/qa/src'), ('tests', '/qa/tests'),
+            ('Kenworth_Recursos_de_Prueba', '/qa/Kenworth_Recursos_de_Prueba'),
+            ('.streamlit', '/qa/.streamlit'))
+                  for item in ('--mount', f'type=bind,source={ROOT / source},target={target},readonly')]
+        test_output = command(['docker', 'run', '--rm', '--network', 'none', '--read-only',
+                               '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
+                               '--pids-limit', '128', '--memory', '768m', '--cpus', '1',
+                               '--tmpfs', '/tmp:rw,noexec,nosuid,size=64m,mode=1777',
+                               *mounts, '-e', 'PYTHONPATH=/qa/src',
+                               '-e', 'HOME=/tmp', '-e', 'XDG_CACHE_HOME=/tmp/.cache', image,
                                'python', '-m', 'unittest', 'discover', '-s', '/qa/tests',
                                '-p', 'test_e2e.py', '-v'], timeout=180)
         report['checks']['app_test'] = 'PASS: flujo UI, navegación, reporte y hardening'

@@ -73,6 +73,20 @@ def pipeline_snapshot(db):
             "invalid": db.execute("SELECT count(*) FROM pipeline_results WHERE status!='NORMALIZED'").fetchone()[0]}
 
 
+def read_pipeline_snapshot(db_path):
+    """Read a previously initialized collector DB without creating a file."""
+    path = Path(db_path)
+    if not path.is_file():
+        return None
+    db = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True, timeout=2)
+    try:
+        return pipeline_snapshot(db)
+    except sqlite3.OperationalError:
+        return None
+    finally:
+        db.close()
+
+
 def run_collector(db_path, resources, *, port=0, interval=0.5):
     """Opt-in loopback collector; stop with Ctrl-C, never expose a public listener."""
     parameters = load_context(resources)["parameters"]
