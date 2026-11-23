@@ -1,6 +1,6 @@
 # Priorización preventiva (WP-010)
 
-`kenworth.prioritization.build_priority_queue(alerts, events, context, topology)` consume los contratos de detección, explicación, playbooks y exposición. Devuelve `investigations`, `hardening`, `r02_counterfactual` y `model`. No escribe SQLite ni ejecuta cambios. Las investigaciones se agrupan por `evento_id`; E0324 conserva AL004 y AL005 en una sola fila de investigación, sin llamarlas incidentes.
+`kenworth.prioritization.build_priority_queue(alerts, events, context, topology)` consume los contratos de detección, explicación, playbooks y exposición. Devuelve `investigations`, `hardening`, `asset_priorities`, `r02_counterfactual` y `model`. `asset_priorities` expone el puntaje y sus motivos para cada uno de los diez activos, incluso sin alertas. No escribe SQLite ni ejecuta cambios. Las investigaciones se agrupan por `evento_id`; E0324 conserva AL004 y AL005 en una sola fila de investigación, sin llamarlas incidentes.
 
 ## Matriz didáctica
 
