@@ -12,6 +12,7 @@ import streamlit as st
 from kenworth.correlation import investigate
 from kenworth.academy_ui import local_draft_scope, render_academy, render_context_help
 from kenworth.assistant import AssistantService
+from kenworth.assistant_runtime import local_provider
 from kenworth.audit_ui import render_audit_center
 from kenworth.detection import detect
 from kenworth.drafts import LocalDraftStore
@@ -489,13 +490,21 @@ def integrations_view(context):
 
 def assistant_view(context, events, alerts, topology, exposure, queue):
     st.header("Asistente de investigación")
-    st.caption("Fallback determinista local. Ningún proveedor externo está configurado ni recibe datos.")
+    local_enabled = os.getenv("SENTRIX_LOCAL_AI_ENABLED") == "1"
+    st.caption("Modelo local opt-in con fallback determinista. Ningún proveedor externo está configurado ni recibe datos.")
+    st.write("**Backend de interpretación:**", "Modelo local habilitado explícitamente" if local_enabled else "Fallback determinista")
     selected = st.selectbox("Alerta para borrador", [alert["alerta_id"] for alert in alerts])
     question = st.text_area("Pregunta al asistente", value="¿Qué evidencia falta antes de decidir?")
     if st.button("Generar borrador verificable"):
         try:
-            result = AssistantService(events, alerts, context, topology, exposure, queue).ask_alert(selected, question)
+            provider = local_provider(local_enabled, os.getenv("SENTRIX_LOCAL_AI_ENDPOINT", ""),
+                                      os.getenv("SENTRIX_LOCAL_AI_MODEL", ""))
+            result = AssistantService(events, alerts, context, topology, exposure, queue,
+                                      provider=provider).ask_alert(selected, question)
             st.write("**Interpretación propuesta:**", result["draft"]["interpretation"])
+            st.write("**Origen de la interpretación:**", result["draft"]["provider_id"])
+            if result["fallback_reason"]:
+                st.info(result["fallback_reason"])
             st.write("**Información faltante:**", result["draft"]["missing_information"])
             st.write("**Evidencia:**", result["draft"]["evidence"])
             st.caption("Borrador sujeto a revisión humana. No se guarda como decisión ni ejecuta contención.")
