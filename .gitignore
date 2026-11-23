@@ -7,3 +7,6 @@ __pycache__/
 .venv/
 .data/
 artifacts/acceptance/p01/
+artifacts/acceptance/p02/
+artifacts/acceptance/p03/
+artifacts/acceptance/e2e/

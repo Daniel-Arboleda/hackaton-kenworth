@@ -8,8 +8,8 @@ Registro maestro del programa sobre recursos exclusivamente sintéticos. Esta re
 | 006 | 008 | Explicaciones y cuatro playbooks trazables, prudentes y reproducibles | PR #6, HEAD `3776482`, merge `02aebf4` | Pruebas unitarias y regresión post-merge verificadas por integración | INTEGRADO |
 | 009 | 008 | Exposición y rutas candidatas sin aristas `deny` o documentadas transitables | PR #5, HEAD `629268d`, merge `c22ae76` | 26 pruebas Docker, P01 7/7; regresión post-merge verificada por integración | INTEGRADO |
 | 010 | 006 + 009 | Cola priorizada con matriz 1–3 × 1–3 y evidencia | PR #7; merge `2973034fe0ffd3ecb679d7f17b35b19bdecb0da6` | Regresión post-merge verificada por integración | INTEGRADO |
-| 011 | 010 | Dashboard proactivo, reportes y AppTest | Rama `agent/frontend_proactive/wp_011`; PR y HEAD al cierre | `tests/test_frontend.py`, `tests/test_reports.py`; suite Docker y P01 | EN DESARROLLO |
-| 012 | 011 | P01, P02, P03, E2E y revisión de seguridad | Pendiente | Evidencia aislada y reproducible | PENDIENTE |
+| 011 | 010 | Dashboard proactivo, reportes y AppTest | PR #8; merge `e85950783f060c8b5cb38beaf9332b1208bfa0a2` | Regresión post-merge verificada por integración | INTEGRADO |
+| 012 | 011 | P01, P02, P03, E2E y revisión de seguridad | Rama `agent/qa_engineer/wp_012`; PR pendiente | P02 8/8, P03 12/12, E2E aislado PASS; prueba humana pendiente | EN DESARROLLO |
 | 013 | 012 | Documentación final y guion demostrable | Pendiente | Regresión final y evidencia | PENDIENTE |
 
 ## Riesgos y bloqueos
@@ -18,6 +18,7 @@ Registro maestro del programa sobre recursos exclusivamente sintéticos. Esta re
 - Los cuatro tests Streamlit se omiten en Python local sin la dependencia; se ejecutaron y aprobaron en Docker en WP-008.
 - No hay checks registrados en PR #4; cero checks no se interpretó como pruebas aprobadas. Se ejecutaron pruebas locales y Docker explícitamente.
 - Para WPs pendientes, cada PR requiere verificación de HEAD, checks, revisiones, protección, mergeability y regresión post-merge antes de marcar INTEGRADO.
+- En WP-012, Docker agotó los pools para nuevas subredes. El E2E usa el `bridge` existente con proyecto, puerto y volumen exclusivos; no altera otros entornos. La prueba con otro usuario queda pendiente de un participante real.
 
 ## Procedencia
 

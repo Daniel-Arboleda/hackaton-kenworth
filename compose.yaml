@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "${PORT:-8501}:8501"
+      - "127.0.0.1:${PORT:-8501}:8501"
     environment:
       KENWORTH_RESOURCES: /app/resources
       KENWORTH_DB: /app/data/decisions.sqlite
