@@ -51,6 +51,9 @@ class PrioritizationTests(unittest.TestCase):
 
     def test_critical_asset_and_evidence(self):
         result = build_priority_queue(self.alerts, self.events, self.context, self.topology)
+        self.assertEqual(len(result['asset_priorities']), 10)
+        self.assertEqual([item['asset_id'] for item in result['asset_priorities']],
+                         sorted(item['asset_id'] for item in result['asset_priorities']))
         e0305 = next(item for item in result['investigations'] if item['id'] == 'E0305')
         self.assertEqual(e0305['asset_id'], 'A04')
         self.assertEqual(e0305['priority']['value'], 9)

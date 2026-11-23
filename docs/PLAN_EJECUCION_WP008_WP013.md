@@ -1,14 +1,14 @@
 # Plan de ejecución WP-008 a WP-013
 
-Registro maestro del programa sobre recursos exclusivamente sintéticos. Esta revisión se inició desde `origin/main` `8a2692576561a73ea09c6aed39a655ee01f0311e`, después de la fusión verificada de PR #4. La base de WP-010 es `02aebf47df9f3bf2a430f62fc240afc2bc7f70f0`, después de integrar WP-009 y WP-006. Un estado de desarrollo no equivale a integración.
+Registro maestro del programa sobre recursos exclusivamente sintéticos. Esta revisión se inició desde `origin/main` `8a2692576561a73ea09c6aed39a655ee01f0311e`, después de la fusión verificada de PR #4. La base de WP-010 es `02aebf47df9f3bf2a430f62fc240afc2bc7f70f0`, después de integrar WP-009 y WP-006. La base de WP-011 es `2973034fe0ffd3ecb679d7f17b35b19bdecb0da6`, tras integrar WP-010. Un estado de desarrollo no equivale a integración.
 
 | WP | Dependencia | Criterio de aceptación | PR / SHA | Pruebas y evidencia | Estado |
 |---|---|---|---|---|---|
 | 008 | PR #4 | Frontend oficial en `main`, sin regresiones | PR #4; merge `8a2692576561a73ea09c6aed39a655ee01f0311e` | 20 pruebas Docker, P01 7/7, HTTP 200; regresión local post-merge aprobada | INTEGRADO |
 | 006 | 008 | Explicaciones y cuatro playbooks trazables, prudentes y reproducibles | PR #6, HEAD `3776482`, merge `02aebf4` | Pruebas unitarias y regresión post-merge verificadas por integración | INTEGRADO |
 | 009 | 008 | Exposición y rutas candidatas sin aristas `deny` o documentadas transitables | PR #5, HEAD `629268d`, merge `c22ae76` | 26 pruebas Docker, P01 7/7; regresión post-merge verificada por integración | INTEGRADO |
-| 010 | 006 + 009 | Cola priorizada con matriz 1–3 × 1–3 y evidencia | Rama `agent/risk_engineer/wp_010`; PR pendiente | `tests/test_prioritization.py`: 6 casos aprobados; suite y P01 antes de publicar | EN DESARROLLO |
-| 011 | 010 | Dashboard proactivo, reportes y AppTest | Pendiente | AppTest y Docker | PENDIENTE |
+| 010 | 006 + 009 | Cola priorizada con matriz 1–3 × 1–3 y evidencia | PR #7; merge `2973034fe0ffd3ecb679d7f17b35b19bdecb0da6` | Regresión post-merge verificada por integración | INTEGRADO |
+| 011 | 010 | Dashboard proactivo, reportes y AppTest | Rama `agent/frontend_proactive/wp_011`; PR y HEAD al cierre | `tests/test_frontend.py`, `tests/test_reports.py`; suite Docker y P01 | EN DESARROLLO |
 | 012 | 011 | P01, P02, P03, E2E y revisión de seguridad | Pendiente | Evidencia aislada y reproducible | PENDIENTE |
 | 013 | 012 | Documentación final y guion demostrable | Pendiente | Regresión final y evidencia | PENDIENTE |
 
