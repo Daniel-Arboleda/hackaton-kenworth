@@ -31,11 +31,13 @@ from kenworth.storage import DISPOSITIONS, ROLES, connect, get, save
 from kenworth.topology import analyze_asset, build_topology
 from kenworth.topology_graph import render_topology_graph
 from kenworth.contracts_v2 import SourceMessage
+from kenworth.continuous_pipeline import read_pipeline_snapshot
 from kenworth.ui_components import NAVIGATION, render_fields, render_header, render_kpis, render_panel, render_shell, render_status
 
 PROJECT = Path(__file__).resolve().parents[2]
 RESOURCES = Path(os.getenv("KENWORTH_RESOURCES", PROJECT / "Kenworth_Recursos_de_Prueba"))
 DATABASE = Path(os.getenv("KENWORTH_DB", PROJECT / ".data/decisions.sqlite"))
+SYSLOG_DATABASE = Path(os.getenv("KENWORTH_SYSLOG_DB", DATABASE.with_name("syslog.sqlite")))
 DRAFT_DATABASE = Path(os.getenv("KENWORTH_DRAFT_DB", DATABASE.with_name("drafts.sqlite")))
 EVIDENCE = Path(os.getenv("KENWORTH_ACCEPTANCE", PROJECT / "artifacts/acceptance/p01"))
 SECTION_HELP = {
@@ -92,6 +94,14 @@ def summary(context, events, alerts, db, exposure, queue):
     hourly = Counter(event["fecha_hora"][:13] for event in events)
     st.bar_chart({"Eventos": dict(sorted(hourly.items()))})
     st.caption("Conteos por hora del CSV sintético. No representan recepción continua ni tendencia futura.")
+    live = read_pipeline_snapshot(SYSLOG_DATABASE)
+    if live is not None:
+        st.subheader("Colector sintético · estado persistente")
+        st.caption("Contadores de SQLite; no indican que el proceso receptor esté activo en este instante.")
+        render_kpis((("Mensajes procesados", live["processed"]),
+                     ("Eventos canónicos", live["normalized"]),
+                     ("Alertas provisionales", live["alerts"]),
+                     ("Formatos inválidos", live["invalid"])))
     st.subheader("Estado de revisión")
     st.dataframe([{"Estado": name, "Alertas": count} for name, count in sorted(Counter(d["estado"] for d in decisions).items())],
                  use_container_width=True, hide_index=True)
