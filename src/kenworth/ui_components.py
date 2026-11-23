@@ -6,7 +6,7 @@ import streamlit as st
 
 
 NAVIGATION = {
-    "Centro de operaciones": ("Panorama", "Prioridades", "Reporte"),
+    "Centro de operaciones": ("Panorama", "Operaciones", "Prioridades", "Reporte"),
     "Investigaciones": ("Alertas", "Asistente IA", "Demo guiada"),
     "Infraestructura": ("Riesgos por activo", "Topología", "Rutas hipotéticas", "Hardening"),
     "Integraciones": ("Fuentes y conectores",),
