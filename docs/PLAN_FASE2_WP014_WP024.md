@@ -22,7 +22,7 @@ WP-014 fija interfaces Python y contratos JSON serializables para fuentes, parse
 | 021 | 014 | Asistente intercambiable, herramientas read-only y fallback | `agent/ai_engineer/wp_021` | PR #21, HEAD `394c4f9`, merge `573bc24c371d50090286300338feb33e87c00ad9` | 86/86 Docker post-merge; adaptadores externos simulados | INTEGRADO_EN_FASE2 |
 | 022 | 015–021 | Flujos funcionales A–F sin perder MVP | `agent/integration_engineer/wp_022` | PR #22, HEAD `85b19a5`, merge `4ee41202d4eb0716b2a6e50cd305289763b6384a` | 89/89 Docker post-merge; P01 7/7, P02 8/8, P03 12/12 en rama | INTEGRADO_EN_FASE2 |
 | 023 | 022 | QA, seguridad, visual y E2E aislado | `agent/qa_engineer/wp_023` | PR #23, HEAD `4b831a7`, merge `cbc6f28a55981803c84e4fcf5c971ff87df9f32f` | 90/90 Docker post-merge; P01 7/7, P02 8/8, P03 12/12; visual en navegador | INTEGRADO_EN_FASE2 |
-| 024 | 023 | Documentación, informe y PR final a `main` | `agent/release_engineer/wp_024` | PR #24, HEAD `521a030`, merge `c1b83fb2e9c9f05105f3f14d59bead4556bb0e41` | 90/90 Docker post-merge; P01 7/7, P02 8/8, P03 12/12 en rama; enlaces válidos | INTEGRADO_EN_FASE2; PR FINAL PENDIENTE |
+| 024 | 023 | Documentación, informe y PR final a `main` | `agent/release_engineer/wp_024` | PR #24, HEAD `521a030`, merge `c1b83fb2e9c9f05105f3f14d59bead4556bb0e41`; PR final #25 abierto, sin merge | 90/90 Docker post-merge; P01 7/7, P02 8/8, P03 12/12 en rama; enlaces válidos | INTEGRADO_EN_FASE2; MAIN_PENDIENTE_APROBACION |
 
 ## Integración y decisiones
 
