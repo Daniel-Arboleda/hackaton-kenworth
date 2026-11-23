@@ -25,6 +25,12 @@ except ImportError:
 
 @unittest.skipUnless(AppTest, 'Streamlit AppTest is available in Docker')
 class EndToEndTests(unittest.TestCase):
+    @staticmethod
+    def navigate(app, area, view):
+        app.sidebar.selectbox[0].set_value(area).run()
+        app.sidebar.selectbox[1].set_value(view).run()
+        return app
+
     def test_alert_decision_restart_report_and_hardening(self):
         with tempfile.TemporaryDirectory() as directory:
             variables = {key: os.environ.get(key) for key in
@@ -37,7 +43,7 @@ class EndToEndTests(unittest.TestCase):
                 app = AppTest.from_file(str(ROOT / 'src/kenworth/app.py'), default_timeout=30).run()
                 self.assertEqual(len(app.exception), 0)
                 self.assertEqual([item.value for item in app.metric[:3]], ['324', '6', '10'])
-                app.sidebar.radio[0].set_value('Alertas').run()
+                self.navigate(app, 'Investigaciones', 'Alertas')
                 self.assertEqual(len(app.exception), 0)
                 next(item for item in app.selectbox if item.label == 'Seleccione una alerta').set_value('AL001')
                 next(item for item in app.selectbox if item.label == 'Disposición del analista').set_value('Requiere investigación')
@@ -55,9 +61,13 @@ class EndToEndTests(unittest.TestCase):
                 reopened = AppTest.from_file(str(ROOT / 'src/kenworth/app.py'), default_timeout=30).run()
                 self.assertEqual(len(reopened.exception), 0)
                 self.assertEqual(reopened.metric[3].value, '1')
-                for section in ('Prioridades', 'Riesgos por activo', 'Topología',
-                                'Rutas hipotéticas', 'Hardening', 'Reporte'):
-                    reopened.sidebar.radio[0].set_value(section).run()
+                for area, section in (('Centro de operaciones', 'Prioridades'),
+                                      ('Infraestructura', 'Riesgos por activo'),
+                                      ('Infraestructura', 'Topología'),
+                                      ('Infraestructura', 'Rutas hipotéticas'),
+                                      ('Infraestructura', 'Hardening'),
+                                      ('Centro de operaciones', 'Reporte')):
+                    self.navigate(reopened, area, section)
                     self.assertEqual(len(reopened.exception), 0, section)
 
                 resources = ROOT / 'Kenworth_Recursos_de_Prueba'

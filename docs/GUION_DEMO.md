@@ -1,5 +1,11 @@
 # Guion de demostración — 3 a 5 minutos
 
+## Variante de fase 2 — 5 minutos
+
+Use la demo aislada en `127.0.0.1:18523` y conserve 18513 estable. En Panorama (30 s), señale 324 eventos, seis alertas y modo archivo. En Topología (60 s), filtre DB-LAB, muestre una relación `allow` con ID de evento y explique que `deny` y documental no son rutas. En Alertas (75 s), abra AL001/E0321/CH01, escriba una justificación sintética y pulse **Guardar borrador**; confirme que la decisión sigue pendiente. Abra Guía rápida y regrese al formulario para recuperar el texto. En Centro de auditoría (45 s), muestre una comprobación y una propuesta de calibración, sin aplicarla. En Fuentes y conectores (30 s), analice una muestra sintética y aclare que el receptor Syslog corre aparte en loopback. En Asistente IA (45 s), genere el borrador determinista con evidencia y explique que no hay proveedor externo en vivo ni acciones automáticas. Cierre (15 s) con límites y pruebas reales: 90/90 Docker en WP-023, P01 7/7, P02 8/8 y P03 12/12.
+
+No presente el parser Palo Alto como integración real, la calibración de laboratorio como aprobación empresarial ni las alertas como incidentes confirmados.
+
 **Preparación:** arranque `kenworth-demo` en un puerto loopback libre y confirme HTTP 200. Use un volumen de demo propio; si ya contiene decisiones, aclárelo antes de mostrar los conteos. No use datos reales.
 
 | Tiempo aproximado | Pantalla | Narración y acción |

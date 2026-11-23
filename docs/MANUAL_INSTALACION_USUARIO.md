@@ -1,5 +1,22 @@
 # Instalación y manual de usuario
 
+## Inicio separado de fase 2
+
+No altere el proyecto `kenworth-demo` ni el puerto 18513 de la demo estable. En esta rama use `PORT=18523` y un nombre de proyecto distinto:
+
+```powershell
+$env:PORT = '18523'
+docker compose -p kenworth-phase2 -f .\compose.yaml config
+docker compose -p kenworth-phase2 -f .\compose.yaml up --build -d
+(Invoke-WebRequest 'http://127.0.0.1:18523/_stcore/health').StatusCode
+```
+
+Si faltan subredes, añada `-f .\compose.bridge.yaml` a los comandos Compose. Verifique que el puerto se publica en `127.0.0.1`. Use `docker compose -p kenworth-phase2 -f .\compose.yaml down` para detener esta demo sin `-v` y sin afectar 18513.
+
+En la navegación de fase 2, **Topología** ofrece filtros y evidencia de aristas; **Centro de auditoría** muestra cuestionarios y una calibración de laboratorio que solo escribe archivos derivados; **Guía rápida** ofrece conceptos y tutoriales. En **Alertas**, “Guardar borrador” conserva un formulario temporal aislado de “Guardar decisión”; su clave de recuperación está en la URL local y no debe compartirse. **Asistente IA** usa fallback determinista y produce un borrador, sin guardar decisiones. **Fuentes y conectores** inspecciona una muestra en memoria, sin iniciar receptores.
+
+Para recibir Syslog sintético, consulte [receptor local](RECEPTOR_SYSLOG_WP019.md) y [parsers](PARSERS_WP020.md). Ese proceso es separado y solo debe escuchar en loopback. Para auditoría, consulte [calibración](AUDITORIA_CALIBRACION_WP018.md); para IA, [asistente](ASISTENTE_AGNOSTICO_WP021.md). No conecte dispositivos reales ni habilite proveedor externo con datos reales.
+
 ## Requisitos de infraestructura
 
 - Equipo local con Docker Desktop, Docker Compose, PowerShell y un puerto loopback libre. Python 3.10+ permite ejecutar las pruebas unitarias sin la imagen; la imagen usa Python 3.12.
