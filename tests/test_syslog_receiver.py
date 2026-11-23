@@ -42,8 +42,11 @@ class SyslogReceiverTests(unittest.TestCase):
 
     def test_receive_deduplicate_redact_and_queue_limit(self):
         self.send(b"<134> test-one\n")
+        self.until(lambda: self.receiver.stats()["accepted"] == 1)
         self.send(b"<134> test-one\n")
+        self.until(lambda: self.receiver.stats()["duplicates"] == 1)
         self.send(b"<134> test-two token=lab-secret\n")
+        self.until(lambda: self.receiver.stats()["accepted"] == 2)
         self.send(b"<134> test-three\n")
         self.until(lambda: self.receiver.stats()["accepted"] == 2 and
                    self.receiver.stats()["rejected"] == 1 and
