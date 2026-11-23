@@ -20,6 +20,7 @@ from kenworth.explanations import explain_alert
 from kenworth.exposure import analyze_exposure
 from kenworth.hardening import plan
 from kenworth.ingestion import load_context, load_events
+from kenworth.investigation_journey_ui import render_journey
 from kenworth.operations_ui import render_operations_center
 from kenworth.playbooks import playbook_for
 from kenworth.parsers import detect_format, parse_message
@@ -562,6 +563,7 @@ def main():
         elif section == "Alertas":
             alert_explorer(context, events, alerts, db)
         elif section == "Topología":
+            render_journey(alerts, queue, exposure)
             render_topology_graph(topology, exposure, context)
             topology_view(topology, context)
         elif section == "Asistente IA":
