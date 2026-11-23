@@ -40,4 +40,4 @@ Las pruebas usan datos sintéticos y no atacan al host Windows. El ejecutor E2E 
 
 ## Próxima puerta de gobierno
 
-Los PR WP-025 a WP-030 ya se fusionaron a `integration/sentrix-phase3` en orden, con HEAD fijado y regresión posterior. Preparar el PR final de fase hacia `main` y dejarlo abierto. El propietario debe autorizar específicamente cualquier merge final a `main`.
+Los PR WP-025 a WP-030 ya se fusionaron a `integration/sentrix-phase3` en orden, con HEAD fijado y regresión posterior. El PR final [#32](https://github.com/Daniel-Arboleda/hackaton-kenworth/pull/32) hacia `main` permanece abierto. El propietario debe autorizar específicamente cualquier merge final a `main`.

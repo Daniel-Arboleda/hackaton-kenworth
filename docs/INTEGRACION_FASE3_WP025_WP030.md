@@ -15,4 +15,4 @@ Cada rama dependiente incorporó el HEAD de fase vigente mediante merge normal a
 
 Regresión sobre el merge WP-030: 98/98 Docker, P01 7/7, P02 8/8, P03 12/12 y E2E PASS. Los ejecutores de aceptación declararon recursos originales intactos. La demo integrada en `127.0.0.1:18531` y la demo estable en `127.0.0.1:18513` respondieron HTTP 200. El colector integrado no publicó puertos y procesó dos mensajes sintéticos en dos eventos y dos alertas provisionales.
 
-La rama final requiere un commit documental para actualizar este registro y el checkpoint; luego se repetirá la validación en ese HEAD. El PR final hacia `main` debe permanecer abierto hasta autorización específica del propietario.
+El PR final [#32](https://github.com/Daniel-Arboleda/hackaton-kenworth/pull/32) apunta de `integration/sentrix-phase3` a `main` y permanece abierto. Su HEAD final se revalida después de publicar este checkpoint. El merge a `main` requiere autorización específica del propietario.
