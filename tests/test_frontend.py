@@ -43,7 +43,8 @@ class FrontendTests(unittest.TestCase):
         app = self.app()
         self.assertEqual([(item.label, item.value) for item in app.metric][:3],
                          [("Eventos", "324"), ("Alertas", "6"), ("Activos", "10")])
-        for section in ("Alertas", "Topología", "Hardening", "Validación", "Demo guiada"):
+        for section in ("Prioridades", "Riesgos por activo", "Alertas", "Topología",
+                        "Rutas hipotéticas", "Hardening", "Reporte", "Validación", "Demo guiada"):
             app.sidebar.radio[0].set_value(section).run()
             self.assertEqual(len(app.exception), 0, section)
 
@@ -75,6 +76,31 @@ class FrontendTests(unittest.TestCase):
         self.assertEqual(reopened.metric[3].value, "1")
         reopened.sidebar.radio[0].set_value("Alertas").run()
         self.assertEqual(reopened.selectbox[3].value, "Requiere investigación")
+
+    def test_priority_asset_and_route_details(self):
+        app = self.app()
+        app.sidebar.radio[0].set_value("Prioridades").run()
+        self.assertEqual(len(app.exception), 0)
+        self.assertIn("E0324", app.selectbox[0].options)
+        app.selectbox[0].set_value("E0324").run()
+        self.assertEqual(len(app.exception), 0)
+        app.sidebar.radio[0].set_value("Riesgos por activo").run()
+        self.assertEqual(len(app.exception), 0)
+        self.assertEqual(len(app.selectbox[0].options), 10)
+        app.selectbox[0].set_value("A04").run()
+        self.assertEqual(len(app.exception), 0)
+        self.assertTrue(any("Prioridad de revisión calculada" in item.value for item in app.markdown))
+        app.sidebar.radio[0].set_value("Rutas hipotéticas").run()
+        self.assertEqual(len(app.exception), 0)
+
+    def test_report_and_topology_views(self):
+        app = self.app()
+        app.sidebar.radio[0].set_value("Topología").run()
+        self.assertEqual(len(app.exception), 0)
+        self.assertTrue(any("Leyenda" in item.value for item in app.caption))
+        app.sidebar.radio[0].set_value("Reporte").run()
+        self.assertEqual(len(app.exception), 0)
+        self.assertTrue(any("Dataset" in item.value for item in app.markdown))
 
 
 if __name__ == "__main__":

@@ -118,7 +118,11 @@ def build_priority_queue(alerts, events, context, topology, exposure=None):
             'validation': proposal['validacion'], 'reversion': proposal['reversion'],
             'status': 'Propuesta; requiere aprobación y ejecución humana evidenciada'})
 
+    asset_priorities = [dict(asset_id=asset['asset_id'], asset=asset['name'],
+                             priority=_asset_priority(asset))
+                        for asset in sorted(exposure['assets'], key=lambda row: row['asset_id'])]
     return {'investigations': _sort(investigations), 'hardening': _sort(hardening),
+            'asset_priorities': asset_priorities,
             'r02_counterfactual': evaluate_r02_counterfactual(events, topology, exposure),
             'model': {'impact': 'Alta=3, Media=2, Baja=1; desconocida=1 provisional',
                       'exposure': '3: ruta candidata entre zonas o H01/R02 amplio con allow observado; '
