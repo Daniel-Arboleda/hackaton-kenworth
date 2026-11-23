@@ -84,7 +84,7 @@ class FrontendTests(unittest.TestCase):
         app.selectbox[3].set_value("Requiere investigación")
         app.selectbox[4].set_value("Administrador del activo")
         app.text_area[0].set_value("Revisar alcance de CH01")
-        app.button[0].click().run()
+        next(item for item in app.button if item.label == "Guardar decisión").click().run()
         self.assertEqual(len(app.exception), 0)
         reopened = self.app()
         self.assertEqual(reopened.metric[3].value, "1")
@@ -120,10 +120,33 @@ class FrontendTests(unittest.TestCase):
         app = self.app()
         self.assertTrue(any("Modo archivo" in item.value for item in app.markdown))
         self.navigate(app, "Integraciones", "Fuentes y conectores")
-        self.assertTrue(any("receptor Syslog" in item.value for item in app.markdown))
+        self.assertTrue(any("Fuentes y conectores sintéticos" in item.value for item in app.header))
         self.navigate(app, "Investigaciones", "Alertas")
         self.assertTrue(any("Señal observada" in item.value for item in app.markdown))
         self.assertTrue(any(item.label == "Campos técnicos completos" for item in app.expander))
+
+    def test_phase2_screens_and_draft_not_decision(self):
+        app = self.app()
+        self.navigate(app, "Investigaciones", "Alertas")
+        next(item for item in app.text_area if item.label == "Justificación y evidencia adicional").set_value("Revisar CH01")
+        next(item for item in app.button if item.label == "Guardar borrador").click().run()
+        self.assertEqual(len(app.exception), 0)
+        from kenworth.storage import connect, get
+        db = connect(Path(self.temp.name) / "decisions.sqlite")
+        self.assertIsNone(get(db, "AL001"))
+        db.close()
+        self.navigate(app, "Academia y ayuda", "Guía rápida")
+        self.assertTrue(any("Academia y ayuda" in item.value for item in app.header))
+        self.navigate(app, "Investigaciones", "Alertas")
+        self.assertEqual(next(item for item in app.text_area if item.label == "Justificación y evidencia adicional").value,
+                         "Revisar CH01")
+        self.navigate(app, "Investigaciones", "Asistente IA")
+        next(item for item in app.button if item.label == "Generar borrador verificable").click().run()
+        self.assertEqual(len(app.exception), 0)
+        self.assertTrue(any("Interpretación propuesta" in item.value for item in app.markdown))
+        self.navigate(app, "Integraciones", "Fuentes y conectores")
+        next(item for item in app.button if item.label == "Analizar muestra sin ingerir").click().run()
+        self.assertEqual(len(app.exception), 0)
 
 
 if __name__ == "__main__":
