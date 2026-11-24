@@ -62,6 +62,26 @@ Las pruebas Streamlit AppTest requieren Streamlit; si Python local no lo tiene, 
 - [Plan maestro y checkpoint de fase 2](docs/PLAN_FASE2_WP014_WP024.md)
 - [Entrega, costos y riesgos de fase 2](docs/ENTREGA_FASE2_WP024.md)
 - [QA y evidencia de fase 2](docs/QA_FASE2_WP023.md)
+- [Plan de Fase 3](docs/PLAN_FASE3_WP025_WP030.md)
+- [Modelo de amenazas del laboratorio](docs/MODELO_AMENAZAS_WP025.md)
+- [Centro de operaciones](docs/CENTRO_OPERACIONES_WP026.md)
+- [Asistente IA-first y benchmark](docs/ASISTENTE_IA_FIRST_WP027.md)
+- [Flujo continuo sintético](docs/FLUJO_CONTINUO_WP028.md)
+- [Recorrido guiado del grafo](docs/GRAFO_GUIADO_WP029.md)
+- [QA y entrega de Fase 3](docs/QA_ENTREGA_FASE3_WP030.md)
+- [Registro de integración de Fase 3](docs/INTEGRACION_FASE3_WP025_WP030.md)
+
+## Demo aislada de Fase 3
+
+Desde esta rama, use otro proyecto y puerto loopback para conservar la demo estable:
+
+```powershell
+$env:PORT = '18530'
+docker compose --profile collector -p sentrix-phase3 -f .\compose.yaml -f .\compose.bridge.yaml up --build -d app collector
+docker compose --profile collector -p sentrix-phase3 -f .\compose.yaml -f .\compose.bridge.yaml exec -T collector python -m kenworth.synthetic_syslog --port 18519 --count 2 --canonical
+```
+
+Abra `http://127.0.0.1:18530`. La app muestra el estado persistido del pipeline en **Panorama**. El colector escucha solo dentro de su contenedor y no publica puertos; el generador se ejecuta dentro de ese mismo contenedor. Los mensajes y alertas de esta demo son sintéticos. El perfil `collector` es opt-in y no conecta equipos reales.
 
 ## Límites
 

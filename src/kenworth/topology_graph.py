@@ -193,6 +193,17 @@ def render_topology_graph(topology, exposure, context):
     st.markdown("**Leyenda:** azul sólido con flecha = allow observado; rojo discontinuo con × = deny (no transitable); "
                 "violeta punteado con ? = flujo documental no verificado; amarillo = selección o ruta candidata.")
     st.warning("Una observación allow no prueba conectividad completa. Una ruta candidata no demuestra movimiento lateral, explotación o compromiso.")
+    edge_choices = {f"{index}: {edge['source']} → {edge['target']} · {edge['label']} · {edge['port']}": edge
+                    for index, edge in enumerate(model["edges"])}
+    with st.expander("Inspeccionar una relación"):
+        selected_edge = st.radio("Relación para inspeccionar", ["Ninguna"] + list(edge_choices),
+                                 key="graph_edge", horizontal=False)
+        if selected_edge != "Ninguna":
+            edge = edge_choices[selected_edge]
+            st.write("**Relación:**", edge["label"], "· **Verificación:**", edge["verification"])
+            st.write("**Evidencia:**", edge["evidence"], "· **Eventos:**", edge["event_ids"] or "Sin observación")
+            if edge["label"] != RELATIONS[0]:
+                st.caption("Esta relación no es elegible para una ruta hipotética transitable.")
     if path is not None:
         if not model["path_visible"]:
             st.info("La ruta seleccionada queda parcial u oculta por los filtros actuales.")

@@ -6,11 +6,44 @@ services:
     environment:
       KENWORTH_RESOURCES: /app/resources
       KENWORTH_DB: /app/data/decisions.sqlite
+      KENWORTH_SYSLOG_DB: /app/data/syslog.sqlite
+      HOME: /tmp
+      XDG_CACHE_HOME: /tmp/.cache
     volumes:
       - ./Kenworth_Recursos_de_Prueba:/app/resources:ro
       - decisions:/app/data
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    pids_limit: 128
+    mem_limit: 768m
+    cpus: 1.0
+  collector:
+    profiles:
+      - collector
+    build: .
+    command: ["python", "-m", "kenworth.continuous_pipeline", "--db", "/app/data/syslog.sqlite", "--resources", "/app/resources", "--port", "18519"]
+    environment:
+      HOME: /tmp
+      XDG_CACHE_HOME: /tmp/.cache
+    volumes:
+      - ./Kenworth_Recursos_de_Prueba:/app/resources:ro
+      - decisions:/app/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    pids_limit: 128
+    mem_limit: 384m
+    cpus: 0.5
 volumes:
   decisions:

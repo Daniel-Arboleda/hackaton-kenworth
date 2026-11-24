@@ -12,6 +12,7 @@ import streamlit as st
 from kenworth.correlation import investigate
 from kenworth.academy_ui import local_draft_scope, render_academy, render_context_help
 from kenworth.assistant import AssistantService
+from kenworth.assistant_runtime import local_provider
 from kenworth.audit_ui import render_audit_center
 from kenworth.detection import detect
 from kenworth.drafts import LocalDraftStore
@@ -19,6 +20,8 @@ from kenworth.explanations import explain_alert
 from kenworth.exposure import analyze_exposure
 from kenworth.hardening import plan
 from kenworth.ingestion import load_context, load_events
+from kenworth.investigation_journey_ui import render_journey
+from kenworth.operations_ui import render_operations_center
 from kenworth.playbooks import playbook_for
 from kenworth.parsers import detect_format, parse_message
 from kenworth.phase2_flows import inspect_messages
@@ -28,14 +31,17 @@ from kenworth.storage import DISPOSITIONS, ROLES, connect, get, save
 from kenworth.topology import analyze_asset, build_topology
 from kenworth.topology_graph import render_topology_graph
 from kenworth.contracts_v2 import SourceMessage
+from kenworth.continuous_pipeline import read_pipeline_snapshot
 from kenworth.ui_components import NAVIGATION, render_fields, render_header, render_kpis, render_panel, render_shell, render_status
 
 PROJECT = Path(__file__).resolve().parents[2]
 RESOURCES = Path(os.getenv("KENWORTH_RESOURCES", PROJECT / "Kenworth_Recursos_de_Prueba"))
 DATABASE = Path(os.getenv("KENWORTH_DB", PROJECT / ".data/decisions.sqlite"))
+SYSLOG_DATABASE = Path(os.getenv("KENWORTH_SYSLOG_DB", DATABASE.with_name("syslog.sqlite")))
 DRAFT_DATABASE = Path(os.getenv("KENWORTH_DRAFT_DB", DATABASE.with_name("drafts.sqlite")))
 EVIDENCE = Path(os.getenv("KENWORTH_ACCEPTANCE", PROJECT / "artifacts/acceptance/p01"))
 SECTION_HELP = {
+    "Operaciones": "Salud, prioridades, recomendaciones y decisiones locales del laboratorio sintético.",
     "Panorama": "Señales y decisiones basadas exclusivamente en el archivo sintético cargado.",
     "Prioridades": "Orden de revisión calculado por el backend; no es severidad de incidente.",
     "Riesgos por activo": "Criticidad, hallazgos y relaciones con procedencia verificable.",
@@ -88,6 +94,14 @@ def summary(context, events, alerts, db, exposure, queue):
     hourly = Counter(event["fecha_hora"][:13] for event in events)
     st.bar_chart({"Eventos": dict(sorted(hourly.items()))})
     st.caption("Conteos por hora del CSV sintético. No representan recepción continua ni tendencia futura.")
+    live = read_pipeline_snapshot(SYSLOG_DATABASE)
+    if live is not None:
+        st.subheader("Colector sintético · estado persistente")
+        st.caption("Contadores de SQLite; no indican que el proceso receptor esté activo en este instante.")
+        render_kpis((("Mensajes procesados", live["processed"]),
+                     ("Eventos canónicos", live["normalized"]),
+                     ("Alertas provisionales", live["alerts"]),
+                     ("Formatos inválidos", live["invalid"])))
     st.subheader("Estado de revisión")
     st.dataframe([{"Estado": name, "Alertas": count} for name, count in sorted(Counter(d["estado"] for d in decisions).items())],
                  use_container_width=True, hide_index=True)
@@ -487,13 +501,21 @@ def integrations_view(context):
 
 def assistant_view(context, events, alerts, topology, exposure, queue):
     st.header("Asistente de investigación")
-    st.caption("Fallback determinista local. Ningún proveedor externo está configurado ni recibe datos.")
+    local_enabled = os.getenv("SENTRIX_LOCAL_AI_ENABLED") == "1"
+    st.caption("Modelo local opt-in con fallback determinista. Ningún proveedor externo está configurado ni recibe datos.")
+    st.write("**Backend de interpretación:**", "Modelo local habilitado explícitamente" if local_enabled else "Fallback determinista")
     selected = st.selectbox("Alerta para borrador", [alert["alerta_id"] for alert in alerts])
     question = st.text_area("Pregunta al asistente", value="¿Qué evidencia falta antes de decidir?")
     if st.button("Generar borrador verificable"):
         try:
-            result = AssistantService(events, alerts, context, topology, exposure, queue).ask_alert(selected, question)
+            provider = local_provider(local_enabled, os.getenv("SENTRIX_LOCAL_AI_ENDPOINT", ""),
+                                      os.getenv("SENTRIX_LOCAL_AI_MODEL", ""))
+            result = AssistantService(events, alerts, context, topology, exposure, queue,
+                                      provider=provider).ask_alert(selected, question)
             st.write("**Interpretación propuesta:**", result["draft"]["interpretation"])
+            st.write("**Origen de la interpretación:**", result["draft"]["provider_id"])
+            if result["fallback_reason"]:
+                st.info(result["fallback_reason"])
             st.write("**Información faltante:**", result["draft"]["missing_information"])
             st.write("**Evidencia:**", result["draft"]["evidence"])
             st.caption("Borrador sujeto a revisión humana. No se guarda como decisión ni ejecuta contención.")
@@ -540,7 +562,9 @@ def main():
         st.error(f"No se pudieron cargar los datos del laboratorio: {error}")
         st.stop()
     try:
-        if section == "Panorama":
+        if section == "Operaciones":
+            render_operations_center(context, events, alerts, queue, db)
+        elif section == "Panorama":
             summary(context, events, alerts, db, exposure, queue)
         elif section == "Prioridades":
             priority_view(queue, db)
@@ -549,6 +573,7 @@ def main():
         elif section == "Alertas":
             alert_explorer(context, events, alerts, db)
         elif section == "Topología":
+            render_journey(alerts, queue, exposure)
             render_topology_graph(topology, exposure, context)
             topology_view(topology, context)
         elif section == "Asistente IA":
