@@ -11,8 +11,8 @@ from urllib.parse import urlsplit
 from kenworth.contracts_v2 import AssistantResponse
 
 
-PROVIDER_IDS = ('fallback', 'local', 'openai', 'anthropic', 'deepseek')
-_EXTERNAL = {'openai', 'anthropic', 'deepseek'}
+PROVIDER_IDS = ('fallback', 'local', 'ollama', 'openai', 'anthropic', 'deepseek', 'qwen', 'custom')
+_EXTERNAL = {'openai', 'anthropic', 'deepseek', 'qwen', 'custom'}
 _IP = re.compile(r'(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])')
 _EMAIL = re.compile(r'\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b')
 _USER_FIELD = re.compile(r'("(?:usuario_prueba|responsable|justificacion)"\s*:\s*)"(?:[^"\\]|\\.)*"')
@@ -54,6 +54,42 @@ class LocalHTTPTransport:
             if not isinstance(payload, dict) or not isinstance(payload.get('text'), str):
                 raise ProviderUnavailable('Respuesta local requiere objeto JSON con text')
             return payload['text']
+        finally:
+            connection.close()
+
+
+class OllamaTransport:
+    """Ollama's actual loopback /api/generate JSON protocol, without redirects."""
+
+    def __init__(self, endpoint):
+        parsed = urlsplit(endpoint)
+        if (parsed.scheme != 'http' or parsed.hostname not in ('127.0.0.1', 'localhost', '::1')
+                or parsed.port is None or parsed.path != '/api/generate'
+                or parsed.query or parsed.fragment or parsed.username or parsed.password):
+            raise ValueError('Ollama exige http://loopback:puerto/api/generate')
+        self.host, self.port = parsed.hostname, parsed.port
+
+    def __call__(self, request, timeout_seconds, api_key):
+        if request['provider_id'] != 'ollama' or api_key:
+            raise ValueError('Ollama solo admite transporte local sin credenciales')
+        connection = HTTPConnection(self.host, self.port, timeout=timeout_seconds)
+        try:
+            body = json.dumps({'model': request['model_id'], 'prompt': request['prompt'],
+                               'stream': False, 'format': 'json'}, ensure_ascii=False).encode()
+            connection.request('POST', '/api/generate', body=body,
+                               headers={'Content-Type': 'application/json'})
+            response = connection.getresponse()
+            if response.status != 200:
+                raise ProviderUnavailable(f'Ollama respondió HTTP {response.status}')
+            maximum = request['max_output_chars'] * 4 + 4096
+            data = response.read(maximum + 1)
+            if len(data) > maximum:
+                raise ProviderUnavailable('Respuesta Ollama excede límite de bytes')
+            payload = json.loads(data.decode('utf-8'))
+            if (not isinstance(payload, dict) or payload.get('done') is not True
+                    or not isinstance(payload.get('response'), str)):
+                raise ProviderUnavailable('Respuesta Ollama incompleta o inválida')
+            return payload['response']
         finally:
             connection.close()
 
