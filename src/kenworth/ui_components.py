@@ -6,7 +6,7 @@ import streamlit as st
 
 
 NAVIGATION = {
-    "Centro de operaciones": ("Panorama", "Operaciones", "Prioridades", "Reporte"),
+    "Centro de operaciones": ("Operaciones", "Panorama", "Prioridades", "Reporte"),
     "Investigaciones": ("Alertas", "Asistente IA", "Demo guiada"),
     "Infraestructura": ("Riesgos por activo", "Topología", "Rutas hipotéticas", "Hardening"),
     "Integraciones": ("Fuentes y conectores", "Fuentes e historial"),
@@ -35,7 +35,7 @@ def render_shell():
 
 def render_header(area, section, subtitle):
     st.markdown(f'<div class="kw-eyebrow">{escape(area)} / {escape(section)}</div>', unsafe_allow_html=True)
-    st.title(section)
+    st.title("Centro de operaciones SENTRIX" if section == "Operaciones" else section)
     st.caption(subtitle)
 
 
