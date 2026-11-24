@@ -15,6 +15,7 @@ from kenworth.firewall_parsers import parse_firewall_message
 from kenworth.firewall_alerts import threat_review_alerts
 from kenworth.investigation_agent import AgentSessionStore, SentrixAgentRuntime
 from kenworth.source_registry import MAX_FILE_BYTES, MAX_MESSAGE_BYTES, SourceRegistry
+from kenworth.storage import DISPOSITIONS, ROLES, connect, get, save
 
 
 FORMATS = {
@@ -186,7 +187,28 @@ def render_agent(context, events, alerts, topology, exposure, queue, database):
             st.write("**Información faltante:**", ", ".join(draft["missing_information"]))
             with st.expander("Referencias verificadas"):
                 st.json(draft["evidence"])
-            st.caption("Para registrar una decisión humana use Investigaciones → Alertas.")
+            st.caption("Un borrador no equivale a decisión humana.")
+    if alert_set == "PAN Threat sintético":
+        st.subheader("Decisión humana de laboratorio")
+        st.caption("Sin login ni identidad verificada. No cambia reglas ni ejecuta contención.")
+        db = connect(database)
+        try:
+            current = get(db, alert_id)
+            if current:
+                st.write("**Estado registrado:**", current["estado"])
+                st.write("**Justificación registrada:**", current["justificacion"])
+            state = st.selectbox("Estado de revisión comercial", ("Revisar", "Escalar", "Cerrar"))
+            disposition = st.selectbox("Disposición comercial", DISPOSITIONS)
+            role = st.selectbox("Rol destinatario comercial", ROLES)
+            reason = st.text_area("Justificación comercial", max_chars=2000)
+            if st.button("Guardar decisión humana de laboratorio"):
+                try:
+                    save(db, alert_id, state, reason, disposition, role)
+                    st.success("Decisión local registrada; sin acción sobre dispositivos.")
+                except ValueError as error:
+                    st.error(str(error))
+        finally:
+            db.close()
     enabled = os.getenv("SENTRIX_OLLAMA_ENABLED") == "1"
     if provider_name.startswith("Ollama"):
         st.info("Ollama requiere opt-in del runtime y modelo ya instalado. "

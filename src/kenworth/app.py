@@ -566,7 +566,8 @@ def main():
         st.stop()
     try:
         if section == "Operaciones":
-            render_operations_center(context, events, alerts, queue, db)
+            render_operations_center(context, events, alerts, queue, db,
+                                     DATABASE.with_name("firewall_sources.sqlite"))
         elif section == "Panorama":
             summary(context, events, alerts, db, exposure, queue)
         elif section == "Prioridades":

@@ -19,7 +19,7 @@ Los artefactos completos de aceptación se escriben en `artifacts/acceptance` de
 2. Fuentes e historial: registrar dos fuentes lógicas, importar fixtures PAN/Forti/Sophos por archivo UTF-8, revisar vista previa y conteos `NORMALIZED`, `UNMAPPED`, `REJECTED`, `DUPLICATE`; filtrar fabricante y fuente sin borrar historial.
 3. Investigador de laboratorio: seleccionar alerta histórica, modo determinista o agente bajo demanda, preparar borrador con referencias y traza de herramientas, reabrirlo desde SQLite y continuar hacia la decisión humana en Alertas.
 4. Modelo local Ollama: protocolo implementado pero llamada real pendiente; requiere opt-in, modelo ya instalado y endpoint loopback. No se descargó modelo ni se llamó a API de pago.
-5. PAN Threat sintético: evento normalizado con `threat_id` explícito → señal `REVIEW_ONLY` → relación por misma fuente/dispositivo/IP/ventana → borrador persistente con referencia verificada. El E2E nuevo verifica este flujo en Streamlit AppTest dentro de Docker.
+5. PAN Threat sintético: evento normalizado con `threat_id` explícito → señal `REVIEW_ONLY` → relación por misma fuente/dispositivo/IP/ventana → borrador persistente con referencia verificada → decisión humana local con justificación y visualización en Operaciones. El E2E nuevo verifica este flujo en Streamlit AppTest dentro de Docker.
 
 ## Controles comprobados y pendientes
 

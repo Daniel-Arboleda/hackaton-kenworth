@@ -48,6 +48,20 @@ class Phase4UITests(unittest.TestCase):
                 self.assertEqual(len(saved), 1)
                 self.assertEqual(saved[0]["state"], "DRAFT_READY")
                 self.assertEqual(saved[0]["draft"]["evidence"][0]["source"], "firewall:pan-ui")
+                next(item for item in app.text_area if item.label == "Justificación comercial").set_value(
+                    "Revisar referencia sintética con el analista")
+                next(button for button in app.button if button.label ==
+                     "Guardar decisión humana de laboratorio").click().run()
+                self.assertEqual(len(app.exception), 0)
+                from kenworth.storage import connect, get
+                db = connect(Path(directory) / "decisions.sqlite")
+                try:
+                    self.assertEqual(get(db, saved[0]["alert_id"])["estado"], "Revisar")
+                finally:
+                    db.close()
+                app.sidebar.selectbox[0].set_value("Centro de operaciones").run()
+                app.sidebar.selectbox[1].set_value("Operaciones").run()
+                self.assertEqual(len(app.exception), 0)
             finally:
                 for key, value in previous.items():
                     if value is None:
