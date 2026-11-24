@@ -22,3 +22,5 @@ La importación local consume archivos sintéticos de texto UTF-8, un registro p
 ## Limitaciones
 
 El historial conserva texto original sintético para trazabilidad, por lo que no debe recibir datos sensibles reales. El archivo se valida por tamaño, estructura y codificación; la selección de una ruta autorizada pertenece al operador local. La consulta está acotada y el indicador `limited` señala cuando un resumen alcanza el límite. No hay ingestión remota empresarial, certificados de cliente ni métricas de disponibilidad de dispositivos.
+
+La política adicional de señales solo toma registros PAN Threat con identificador explícito; compara registros relacionados dentro de la misma fuente y dispositivo y una ventana de recepción de diez minutos. Son alertas para revisión humana, no incidentes confirmados. Traffic y las variantes Fortinet/Sophos implementadas no generan alertas por mera normalización.
