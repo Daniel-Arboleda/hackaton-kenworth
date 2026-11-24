@@ -63,6 +63,7 @@ class FirewallEvent:
     device_id: str | None = None
     declared_version: str | None = None
     event_time: str | None = None
+    normalized_at: str | None = None
     timezone: str | None = None
     ingestion_batch_id: str | None = None
     action_original: str | None = None
@@ -98,6 +99,7 @@ class FirewallEvent:
             _bounded(getattr(self, name), name)
         _time(self.received_at, "received_at")
         _time(self.event_time, "event_time")
+        _time(self.normalized_at, "normalized_at")
         if self.vendor not in VENDORS or self.action not in ACTIONS:
             raise ValueError("Fabricante o acción no compatible")
         for name in ("source_port", "destination_port"):
