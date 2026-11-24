@@ -98,6 +98,18 @@ class AgentSessionStore:
         return None if row is None else {'state': row[0], 'draft': json.loads(row[1]) if row[1] else None,
                                          'fallback_reason': row[2], 'tool_trace': json.loads(row[3])}
 
+    def recent(self, limit=20):
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError('Límite de bandeja inválido')
+        with self._connect() as db:
+            rows = db.execute('''SELECT investigation_id,alert_id,mode,state,provider_id,
+                started_at,ended_at,draft_json,fallback_reason,elapsed_ms
+                FROM agent_investigations ORDER BY started_at DESC LIMIT ?''', (limit,)).fetchall()
+        return [{'investigation_id': row[0], 'alert_id': row[1], 'mode': row[2],
+                 'state': row[3], 'provider_id': row[4], 'started_at': row[5],
+                 'ended_at': row[6], 'draft': json.loads(row[7]) if row[7] else None,
+                 'fallback_reason': row[8], 'elapsed_ms': row[9]} for row in rows]
+
 
 class SentrixAgentRuntime:
     """Fixed-plan research over synthetic evidence with model-only interpretation."""
