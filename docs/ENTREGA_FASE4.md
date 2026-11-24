@@ -12,7 +12,7 @@ WP-031 agrega normalización sintética PAN-OS Traffic/Threat, FortiOS Traffic y
 4. Cambiar filtros de fuente y fabricante; volver a la primera y comprobar que su historia persiste.
 5. Abrir **Centro de operaciones → Panorama** y explicar que las seis alertas corresponden al CSV histórico de 324 eventos, no a la importación comercial.
 6. Abrir **Configuración → Investigador de laboratorio**. Seleccionar `PAN Threat sintético`, generar borrador con evidencia de la fuente y ver su persistencia. Comparar con AL001 del archivo histórico.
-7. Abrir **Investigaciones → Alertas** para revisión y decisión humana. El borrador no constituye aprobación ni incidente confirmado.
+7. Registrar una decisión humana local justificada en la vista de investigador para la señal Threat y comprobar su estado en **Centro de operaciones → Operaciones**. Para AL001 histórico, usar **Investigaciones → Alertas**. Ningún borrador constituye aprobación ni incidente confirmado.
 
 ## Limitaciones y próxima acción
 
