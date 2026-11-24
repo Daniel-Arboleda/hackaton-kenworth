@@ -1,12 +1,16 @@
 """Operations center presentation; demo profiles are never identities."""
 
 import streamlit as st
+from pathlib import Path
 
+from kenworth.firewall_alerts import threat_review_alerts
 from kenworth.operations import DEMO_PROFILES, operations_snapshot
+from kenworth.source_registry import SourceRegistry
+from kenworth.storage import get
 from kenworth.ui_components import render_kpis
 
 
-def render_operations_center(context, events, alerts, queue, db):
+def render_operations_center(context, events, alerts, queue, db, source_database=None):
     snapshot = operations_snapshot(context, events, alerts, queue, db)
     st.header("Centro de operaciones · laboratorio")
     profile = st.selectbox("Perfil de demostración", DEMO_PROFILES, key="operations_demo_profile")
@@ -53,3 +57,13 @@ def render_operations_center(context, events, alerts, queue, db):
                    "Actualizado": item["updated"], "Justificación": item["reason"]}
                   for item in snapshot["activity"]], use_container_width=True, hide_index=True)
     st.caption("Historial de estado actual por alerta en SQLite; no es un registro inmutable de cambios.")
+    if source_database and Path(source_database).is_file():
+        commercial = threat_review_alerts(SourceRegistry(source_database))
+        st.subheader("Señales Threat sintéticas para revisión")
+        st.caption("Conjunto comercial separado de los 324 eventos y seis alertas históricas. "
+                   "Sin verificación con dispositivos reales.")
+        st.dataframe([{"Alerta": row["alert_id"], "Fuente": row["source_id"],
+                       "Dispositivo": row["device_id"] or "No declarado",
+                       "Referencia": row["raw_reference"][:16],
+                       "Estado humano": (get(db, row["alert_id"]) or {}).get("estado", "Pendiente")}
+                      for row in commercial], use_container_width=True, hide_index=True)

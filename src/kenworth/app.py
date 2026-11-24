@@ -22,6 +22,7 @@ from kenworth.hardening import plan
 from kenworth.ingestion import load_context, load_events
 from kenworth.investigation_journey_ui import render_journey
 from kenworth.operations_ui import render_operations_center
+from kenworth.phase4_ui import render_agent, render_sources
 from kenworth.playbooks import playbook_for
 from kenworth.parsers import detect_format, parse_message
 from kenworth.phase2_flows import inspect_messages
@@ -54,6 +55,8 @@ SECTION_HELP = {
     "Demo guiada": "Recorrido de alerta, evidencia, contexto y decisión humana.",
     "Asistente IA": "Borradores con evidencia consultada y fallback determinista; sin acciones automáticas.",
     "Fuentes y conectores": "Parsers sintéticos y receptor Syslog local opcional.",
+    "Fuentes e historial": "Registro multifabricante sintético con procedencia y filtros.",
+    "Investigador de laboratorio": "Investigación acotada de alertas históricas y borradores verificables.",
     "Centro de auditoría": "Comprobaciones y calibración derivada de laboratorio.",
     "Guía rápida": "Conceptos, tutoriales y ayuda contextual del laboratorio.",
 }
@@ -563,7 +566,8 @@ def main():
         st.stop()
     try:
         if section == "Operaciones":
-            render_operations_center(context, events, alerts, queue, db)
+            render_operations_center(context, events, alerts, queue, db,
+                                     DATABASE.with_name("firewall_sources.sqlite"))
         elif section == "Panorama":
             summary(context, events, alerts, db, exposure, queue)
         elif section == "Prioridades":
@@ -580,6 +584,10 @@ def main():
             assistant_view(context, events, alerts, topology, exposure, queue)
         elif section == "Fuentes y conectores":
             integrations_view(context)
+        elif section == "Fuentes e historial":
+            render_sources(DATABASE)
+        elif section == "Investigador de laboratorio":
+            render_agent(context, events, alerts, topology, exposure, queue, DATABASE)
         elif section == "Centro de auditoría":
             render_audit_center(context, events, topology, exposure, queue)
         elif section == "Guía rápida":
