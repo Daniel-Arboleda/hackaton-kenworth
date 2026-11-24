@@ -63,7 +63,10 @@ def render_sources(database):
                    "Última recepción": row["last_received_at"] or "Sin mensajes",
                    "Último parser": row["last_parse_status"] or "Sin mensajes"} for row in sources],
                  use_container_width=True, hide_index=True)
-    selected = st.selectbox("Fuente para importar o consultar", [row["source_id"] for row in sources])
+    source_options = [row["source_id"] for row in sources]
+    focus = st.session_state.pop("ops_focus_source", None)
+    selected = st.selectbox("Fuente para importar o consultar", source_options,
+                            index=source_options.index(focus) if focus in source_options else 0)
     source_row = next(row for row in sources if row["source_id"] == selected)
     active = bool(source_row["enabled"])
     if st.button("Deshabilitar fuente" if active else "Habilitar fuente"):

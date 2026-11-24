@@ -42,7 +42,7 @@ SYSLOG_DATABASE = Path(os.getenv("KENWORTH_SYSLOG_DB", DATABASE.with_name("syslo
 DRAFT_DATABASE = Path(os.getenv("KENWORTH_DRAFT_DB", DATABASE.with_name("drafts.sqlite")))
 EVIDENCE = Path(os.getenv("KENWORTH_ACCEPTANCE", PROJECT / "artifacts/acceptance/p01"))
 SECTION_HELP = {
-    "Operaciones": "Salud, prioridades, recomendaciones y decisiones locales del laboratorio sintético.",
+    "Operaciones": "Investigaciones, evidencia, propuestas y decisiones humanas en un mismo lugar.",
     "Panorama": "Señales y decisiones basadas exclusivamente en el archivo sintético cargado.",
     "Prioridades": "Orden de revisión calculado por el backend; no es severidad de incidente.",
     "Riesgos por activo": "Criticidad, hallazgos y relaciones con procedencia verificable.",
@@ -233,7 +233,10 @@ def alert_explorer(context, events, alerts, db):
                    "Fecha": a["fecha_hora"], "Estado": current_decision(db, a["alerta_id"])["estado"],
                    "Disposición": current_decision(db, a["alerta_id"])["disposicion"]} for a in shown],
                  use_container_width=True, hide_index=True)
-    selected = st.selectbox("Seleccione una alerta", [a["alerta_id"] for a in shown])
+    options = [a["alerta_id"] for a in shown]
+    focus = st.session_state.pop("ops_focus_alert", None)
+    selected = st.selectbox("Seleccione una alerta", options,
+                            index=options.index(focus) if focus in options else 0)
     investigate_and_decide(next(a for a in shown if a["alerta_id"] == selected), events, context, db, "explorer")
 
 
@@ -545,15 +548,26 @@ def phase2_placeholder(section):
 
 
 def main():
-    st.set_page_config(page_title="Kenworth Security Monitor", page_icon="🛡️", layout="wide")
+    st.set_page_config(page_title="SENTRIX · Centro de operaciones", page_icon="🛡️", layout="wide")
     render_shell()
-    st.sidebar.markdown("### Kenworth Security Monitor")
+    st.sidebar.markdown("### SENTRIX")
     st.sidebar.caption("Laboratorio sintético · decisiones humanas")
+    if "ops_nav_target" in st.session_state:
+        area_target, view_target, focus_alert, focus_source, focus_asset = st.session_state.pop(
+            "ops_nav_target")
+        st.session_state["area_nav"] = area_target
+        st.session_state["view_nav"] = view_target
+        if focus_alert:
+            st.session_state["ops_focus_alert"] = focus_alert
+        if focus_source:
+            st.session_state["ops_focus_source"] = focus_source
+        if focus_asset:
+            st.session_state["graph_asset"] = focus_asset
     area = st.sidebar.selectbox("Área", tuple(NAVIGATION), key="area_nav")
     section = st.sidebar.selectbox("Vista", NAVIGATION[area], key="view_nav")
     st.sidebar.divider()
-    st.sidebar.caption("Modo archivo · sin receptor activo")
-    render_header(area, section, SECTION_HELP.get(section, "Módulo de fase 2 en preparación."))
+    st.sidebar.caption("Histórico y fuentes sintéticas · estado en Operaciones")
+    render_header(area, section, SECTION_HELP.get(section, "Módulo de laboratorio sintético."))
     render_context_help(section)
     st.warning("Laboratorio sintético de Estud-IA. No representa infraestructura, vulnerabilidades ni incidentes reales de Kenworth.")
     try:
@@ -567,7 +581,8 @@ def main():
     try:
         if section == "Operaciones":
             render_operations_center(context, events, alerts, queue, db,
-                                     DATABASE.with_name("firewall_sources.sqlite"))
+                                     DATABASE.with_name("firewall_sources.sqlite"),
+                                     topology, exposure)
         elif section == "Panorama":
             summary(context, events, alerts, db, exposure, queue)
         elif section == "Prioridades":
