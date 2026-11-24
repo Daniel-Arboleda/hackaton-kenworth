@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from kenworth.assistant_providers import DeterministicProvider, ProviderUnavailable
 from kenworth.assistant_tools import build_tools
-from kenworth.contracts_v2 import AssistantLimits, InvestigationDraft, to_json_dict
+from kenworth.contracts_v2 import AssistantLimits, EvidenceRef, InvestigationDraft, to_json_dict
 from kenworth.explanations import explain_alert
 
 
@@ -134,6 +134,56 @@ class SentrixAgentRuntime:
                    'get_topology_relations': 'topology',
                    'get_authorized_changes': 'change', 'get_playbook': 'help'}
         return self.tools[mapping[name]].execute({'id': identifier})
+
+    def investigate_firewall(self, alert_id, registry):
+        """Read a synthetic Threat review alert from its registered source only."""
+        from kenworth.firewall_alerts import threat_review_alerts
+
+        if not isinstance(alert_id, str) or not _ID.fullmatch(alert_id):
+            raise ValueError('Alerta comercial inválida')
+        alerts = {row['alert_id']: row for row in threat_review_alerts(registry)}
+        alert = alerts.get(alert_id)
+        if alert is None:
+            raise ValueError('Alerta comercial no encontrada')
+        started = time.monotonic()
+        investigation_id = 'INV-' + uuid4().hex
+        self.store.start(investigation_id, alert_id, 'agent', 'fallback')
+        try:
+            rows = registry.history(source_id=alert['source_id'], status='NORMALIZED', limit=1000)
+            selected = next((row for row in rows if row['event_id'] == alert['event_id']), None)
+            if selected is None or selected['raw_reference'] != alert['raw_reference']:
+                raise ValueError('Evidencia de fuente no verificable')
+            related = [row for row in rows if row['event_id'] in alert['related_event_ids']][:3]
+            event = json.loads(selected['event_json'])
+            refs = (EvidenceRef('firewall:' + alert['source_id'], alert['event_id'], 'raw_reference'),)
+            refs += tuple(EvidenceRef('firewall:' + alert['source_id'], row['event_id'], 'raw_reference')
+                          for row in related)
+            if len(refs) > self.limits.max_tool_calls or len(json.dumps([to_json_dict(ref) for ref in refs]).encode()) > self.limits.max_evidence_bytes:
+                raise ValueError('Límite de evidencia excedido')
+            interpretation = ('El registro Threat sintético declara amenaza ' + event['threat_id']
+                              + ' con acción ' + (event.get('action_original') or 'no declarada')
+                              + '. Es una señal para revisión, no un incidente confirmado.')
+            draft = InvestigationDraft(
+                draft_id='DRAFT-' + investigation_id, alert_ids=(alert_id,),
+                event_ids=(alert['event_id'],), interpretation=interpretation,
+                checks_proposed=('Contrastar política, activo y eventos relacionados con un analista.',),
+                evidence=refs,
+                missing_information=('Validación con dispositivo real y contexto operacional',),
+                provider_id='fallback')
+            trace = [{'tool': 'get_alert', 'id': alert_id},
+                     {'tool': 'search_related_events', 'id': alert['event_id']}]
+            if time.monotonic() - started > self.limits.timeout_seconds:
+                raise TimeoutError('Investigación excedió tiempo límite')
+            data = to_json_dict(draft)
+            self.store.finish(investigation_id, data, trace,
+                              [to_json_dict(ref) for ref in refs], None,
+                              int((time.monotonic() - started) * 1000))
+            return {'investigation_id': investigation_id, 'state': 'DRAFT_READY',
+                    'draft': data, 'tool_trace': trace,
+                    'limitations': ['Solo datos sintéticos; revisión humana obligatoria.']}
+        except Exception:
+            self.store.cancel(investigation_id)
+            raise
 
     def investigate(self, alert_id, *, mode='deterministic'):
         if not isinstance(alert_id, str) or alert_id not in self.alerts:

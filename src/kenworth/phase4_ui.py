@@ -12,6 +12,7 @@ from kenworth.assistant_runtime import ollama_provider
 from kenworth.contracts_v2 import SourceMessage
 from kenworth.contracts_v4 import SourceDescriptor
 from kenworth.firewall_parsers import parse_firewall_message
+from kenworth.firewall_alerts import threat_review_alerts
 from kenworth.investigation_agent import AgentSessionStore, SentrixAgentRuntime
 from kenworth.source_registry import MAX_FILE_BYTES, MAX_MESSAGE_BYTES, SourceRegistry
 
@@ -150,7 +151,25 @@ def render_agent(context, events, alerts, topology, exposure, queue, database):
                                                "Adaptador personalizado (pendiente)"))
     st.write("**Política:** máximo cinco consultas de solo lectura; investigación automática apagada.")
     st.caption("No se capturan claves personales. Proveedores externos sin habilitación en esta demo.")
-    alert_id = st.selectbox("Alerta histórica", [row["alerta_id"] for row in alerts])
+    registry = _registry(database)
+    commercial_alerts = threat_review_alerts(registry)
+    alert_set = st.selectbox("Conjunto de alertas", ("Archivo histórico", "PAN Threat sintético"))
+    if alert_set == "PAN Threat sintético":
+        st.caption("Solo registros Threat con identificador explícito generan señal de revisión. "
+                   "El tráfico normalizado no se clasifica automáticamente como ataque.")
+        st.dataframe([{"Alerta": row["alert_id"], "Fuente": row["source_id"],
+                       "Dispositivo": row["device_id"] or "No declarado",
+                       "Amenaza declarada": row["threat_id"],
+                       "Relacionados": len(row["related_event_ids"]),
+                       "Estado": "Revisión humana"} for row in commercial_alerts],
+                     use_container_width=True, hide_index=True)
+        choices = [row["alert_id"] for row in commercial_alerts]
+    else:
+        choices = [row["alerta_id"] for row in alerts]
+    if not choices:
+        st.info("No hay alertas de revisión en el conjunto seleccionado.")
+        return
+    alert_id = st.selectbox("Alerta para investigar", choices)
     store = AgentSessionStore(Path(database).with_name("investigations.sqlite"))
     recent = store.recent()
     if recent:
@@ -179,8 +198,10 @@ def render_agent(context, events, alerts, topology, exposure, queue, database):
                                        os.getenv("SENTRIX_OLLAMA_MODEL", "")) if provider_name.startswith("Ollama") else None
             runtime = SentrixAgentRuntime(events, alerts, context, topology, exposure, queue,
                                           store=store, provider=provider)
-            result = runtime.investigate(alert_id, mode={"Determinista": "deterministic",
-                                         "Asistente IA": "assistant", "Agente bajo demanda": "agent"}[mode])
+            result = (runtime.investigate_firewall(alert_id, registry)
+                      if alert_set == "PAN Threat sintético" else
+                      runtime.investigate(alert_id, mode={"Determinista": "deterministic",
+                                          "Asistente IA": "assistant", "Agente bajo demanda": "agent"}[mode]))
             st.success("Borrador creado para la bandeja humana.")
             st.write("**Investigación:**", result["investigation_id"])
             st.write("**Interpretación:**", result["draft"]["interpretation"])
@@ -188,7 +209,7 @@ def render_agent(context, events, alerts, topology, exposure, queue, database):
                      ", ".join(result["draft"]["missing_information"]) or "No especificada en la regla")
             st.write("**Siguiente verificación:**", ", ".join(result["draft"]["checks_proposed"]))
             st.write("**Origen:**", result["draft"]["provider_id"])
-            if result["fallback_reason"]:
+            if result.get("fallback_reason"):
                 st.info(result["fallback_reason"])
             with st.expander("Evidencia y traza técnica"):
                 st.json({"referencias": result["draft"]["evidence"], "consultas": result["tool_trace"]})
