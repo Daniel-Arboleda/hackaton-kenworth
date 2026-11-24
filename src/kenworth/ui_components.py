@@ -9,10 +9,10 @@ NAVIGATION = {
     "Centro de operaciones": ("Panorama", "Operaciones", "Prioridades", "Reporte"),
     "Investigaciones": ("Alertas", "Asistente IA", "Demo guiada"),
     "Infraestructura": ("Riesgos por activo", "Topología", "Rutas hipotéticas", "Hardening"),
-    "Integraciones": ("Fuentes y conectores",),
+    "Integraciones": ("Fuentes y conectores", "Fuentes e historial"),
     "Auditorías y calibración": ("Validación", "Centro de auditoría"),
     "Academia y ayuda": ("Guía rápida",),
-    "Configuración": ("Estado del laboratorio",),
+    "Configuración": ("Estado del laboratorio", "Investigador de laboratorio"),
 }
 
 

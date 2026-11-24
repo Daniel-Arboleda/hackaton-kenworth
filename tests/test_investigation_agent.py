@@ -57,6 +57,7 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(result['draft']['status'], 'DRAFT')
         self.assertEqual(self.store.get(result['investigation_id'])['draft'],
                          json.loads(json.dumps(result['draft'])))
+        self.assertEqual(self.store.recent()[0]['investigation_id'], result['investigation_id'])
         self.assertEqual(self.store.recover_interrupted(), 0)
 
     def test_forbidden_tools_and_automatic_mode_fail_closed(self):

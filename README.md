@@ -70,6 +70,12 @@ Las pruebas Streamlit AppTest requieren Streamlit; si Python local no lo tiene, 
 - [Recorrido guiado del grafo](docs/GRAFO_GUIADO_WP029.md)
 - [QA y entrega de Fase 3](docs/QA_ENTREGA_FASE3_WP030.md)
 - [Registro de integración de Fase 3](docs/INTEGRACION_FASE3_WP025_WP030.md)
+- [Contratos y parsers de Fase 4](docs/CONTRATOS_FASE4.md)
+- [Formatos y matriz de normalización](docs/FORMATOS_FIREWALL_FASE4.md)
+- [Fuentes e historial multifabricante](docs/FUENTES_HISTORIAL_FASE4.md)
+- [Agente de investigación y configuración IA](docs/AGENTE_IA_FIRST_FASE4.md)
+- [QA y límites de Fase 4](docs/QA_ENTREGA_FASE4.md)
+- [Entrega y guion de Fase 4](docs/ENTREGA_FASE4.md)
 
 ## Demo aislada de Fase 3
 
