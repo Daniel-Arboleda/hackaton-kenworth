@@ -2,15 +2,13 @@ PROYECTO: CYREN / SENTRIX
 FASE: 4
 FECHA: 2026-11-23 America/Bogota
 BASELINE_MAIN: 6b2e3c19cbc86bea200bc92c177dc3b7b130c5dd
-PHASE4_HEAD: 1bd9cef810932df6576fcbbef56f4d891beb7315
-WP_COMPLETADOS: WP-031, WP-032, WP-033
-WP_ACTIVO: WP-034
-PR_ABIERTOS: Ninguno
-PR_FUSIONADOS: #33 WP-031 (67d0b0b), #34 WP-032 (28b1531), #35 WP-033 (1bd9cef)
-TESTS: WP-033 120/120 local y Docker, 120 local post-merge; baseline P01 7/7, P02 8/8, P03 12/12
-LIMITACIONES: Parsers verificados con fixtures sintéticos, no dispositivos reales; sin modelo real ni egress bloqueado
-WORKTREES: integration/sentrix-phase4; agent/firewall_parsers/wp_031; agent/ai_agent/wp_033
-BLOQUEOS: Protección de rama no consultable por REST (404); cero checks remotos y cero revisiones no se interpretaron como aprobación
-SIGUIENTE_ACCION_EXACTA: Crear worktree WP-034 desde HEAD de fase; integrar UI de fuentes/agente, QA final, PR y regresión.
-
-
+PHASE4_HEAD: 34a45d10ef375e14247babe7db18413fba64a760 (último merge funcional; checkpoint posterior)
+WP_COMPLETADOS: WP-031, WP-032, WP-033; WP-034 integrado con límites documentados
+WP_ACTIVO: Cierre de brecha funcional comercial y revisión PR final
+PR_ABIERTOS: PR final a main pendiente de crear
+PR_FUSIONADOS: #33 (67d0b0b), #34 (28b1531), #35 (1bd9cef), #36 (34a45d1)
+TESTS: HEAD 34a45d1: 120/120 local y Docker, P01 7/7, P02 8/8, P03 12/12, E2E heredado PASS
+LIMITACIONES: NO-GO main: eventos comerciales no alimentan alertas/investigación correlacionada; APIs/modelo real sin validar; egress bridge no bloqueado
+WORKTREES: sentrix-phase4-integration, sentrix-wp031, sentrix-wp032, sentrix-wp033, sentrix-wp034
+BLOQUEOS: Protección de rama por REST 404; cero checks/reviews remotos no equivalen a aprobación
+SIGUIENTE_ACCION_EXACTA: Crear PR final fase4→main abierto sin merge; después definir detección comercial explícita y E2E antes de recomendar GO.
